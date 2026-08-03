@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-ivory: #f5f0e8;
+  --color-paper: #fbf8f2;
+  --color-forest: #17352b;
+  --color-forest-deep: #0e231d;
+  --color-moss: #68755a;
+  --color-sage: #a5af93;
+  --color-sand: #d9cdbd;
+  --color-terracotta: #b86145;
+  --color-clay: #8f4634;
+  --color-ink: #18201d;
+  --color-smoke: #55605a;
+
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-cormorant);
+}
+
+:root {
+  --page-gutter: clamp(1.25rem, 0.75rem + 2vw, 3.5rem);
+  --content-width: 90rem;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+  scroll-padding-top: 6rem;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  background: #f5f0e8;
+  color: #18201d;
+  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.container-shell {
+  width: min(
+    calc(100% - (2 * var(--page-gutter))),
+    var(--content-width)
+  );
+  margin-inline: auto;
+}
+
+::selection {
+  background: #a5af93;
+  color: #0e231d;
+}
+
+:focus-visible {
+  outline: 3px solid #b86145;
+  outline-offset: 4px;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-block: 0;
+}
+
+.topographic-field {
+  background-image:
+    radial-gradient(
+      ellipse at 85% 18%,
+      transparent 0 16%,
+      rgb(245 240 232 / 7%) 16.2% 16.35%,
+      transparent 16.55% 21%,
+      rgb(245 240 232 / 6%) 21.2% 21.35%,
+      transparent 21.55% 27%,
+      rgb(245 240 232 / 5%) 27.2% 27.35%,
+      transparent 27.55%
+    ),
+    linear-gradient(
+      105deg,
+      transparent 0 49.9%,
+      rgb(245 240 232 / 4%) 50%,
+      transparent 50.1%
+    );
+  background-size: 100% 100%, 5rem 5rem;
+}
+
+.architectural-grid {
+  background-image:
+    linear-gradient(rgb(165 175 147 / 8%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(165 175 147 / 8%) 1px, transparent 1px),
+    radial-gradient(circle at 50% 40%, #27493d 0%, #17352b 45%, #0e231d 100%);
+  background-size: 2rem 2rem, 2rem 2rem, 100% 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
