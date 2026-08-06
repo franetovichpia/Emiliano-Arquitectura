@@ -1,39 +1,65 @@
 export type NavigationItem = {
   label: string;
-  href: `#${string}`;
+  href: string;
 };
 
-export const navigationItems = [
+export const mainNavigation: readonly NavigationItem[] = [
   {
     label: "Inicio",
-    href: "#inicio",
+    href: "/#inicio",
   },
   {
     label: "Sobre mí",
-    href: "#sobre-mi",
-  },
-  {
-    label: "Proyectos",
-    href: "#proyectos",
-  },
-  {
-    label: "Reflexiones",
-    href: "#reflexiones",
-  },
-  {
-    label: "Salud",
-    href: "#salud",
-  },
-  {
-    label: "Educación",
-    href: "#educacion",
+    href: "/#sobre-mi",
   },
   {
     label: "Servicios",
-    href: "#servicios",
+    href: "/#servicios",
+  },
+  {
+    label: "Proyectos",
+    href: "/#proyectos-profesionales",
   },
   {
     label: "Contacto",
-    href: "#contacto",
+    href: "/#contacto",
   },
-] as const satisfies readonly NavigationItem[];
+];
+
+export const communityNavigation: readonly NavigationItem[] = [
+  {
+    label: "Inicio",
+    href: "/proyectos-comunitarios#inicio-comunitario",
+  },
+  {
+    label: "Propuestas",
+    href: "/proyectos-comunitarios#proyectos",
+  },
+  {
+    label: "Proyectos relacionados",
+    href: "/proyectos-comunitarios#contenido-soberano",
+  },
+  {
+    label: "Recursos",
+    href: "/proyectos-comunitarios#recursos",
+  },
+];
+
+export const footerNavigation: readonly NavigationItem[] = [
+  {
+    label: "Reflexiones",
+    href: "/#reflexiones",
+  },
+  {
+    label: "Proyectos profesionales",
+    href: "/#proyectos-profesionales",
+  },
+  {
+    label: "Proyectos comunitarios",
+    href: "/proyectos-comunitarios",
+  },
+  {
+    label: "Recursos",
+    href: "/proyectos-comunitarios#recursos",
+  },
+];

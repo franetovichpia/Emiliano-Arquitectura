@@ -1,66 +1,98 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-ivory: #f5f0e8;
-  --color-paper: #fbf8f2;
-  --color-forest: #17352b;
-  --color-forest-deep: #0e231d;
-  --color-moss: #68755a;
-  --color-sage: #a5af93;
-  --color-sand: #d9cdbd;
-  --color-terracotta: #b86145;
-  --color-clay: #8f4634;
-  --color-ink: #18201d;
-  --color-smoke: #55605a;
+  --font-sans: var(--font-site-sans);
+  --font-serif: var(--font-boska);
 
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-cormorant);
+  --color-paper: var(--paper);
+  --color-ivory: var(--ivory);
+  --color-concrete: var(--concrete);
+  --color-stone: var(--stone);
+  --color-sand: var(--sand);
+  --color-ink: var(--ink);
+
+  /*
+   * Conservamos estos nombres para no romper los componentes
+   * existentes, pero ahora representan la familia azul blueprint.
+   */
+  --color-forest: var(--blueprint);
+  --color-forest-deep: var(--blueprint-deep);
+
+  --color-blueprint: var(--blueprint);
+  --color-blueprint-deep: var(--blueprint-deep);
+  --color-blueprint-soft: var(--blueprint-soft);
+  --color-blueprint-line: var(--blueprint-line);
+
+  --color-sage: var(--nature);
+  --color-terracotta: var(--construction);
 }
 
 :root {
-  --page-gutter: clamp(1.25rem, 0.75rem + 2vw, 3.5rem);
-  --content-width: 90rem;
+  /* Fondos editoriales */
+
+  --paper: #f1ede4;
+  --ivory: #faf7ef;
+  --concrete: #d5d1c8;
+  --stone: #938f87;
+  --sand: #d9c7ad;
+  --ink: #12202a;
+
+  /* Azul blueprint predominante */
+
+  --blueprint: #16384b;
+  --blueprint-deep: #0b2637;
+  --blueprint-soft: #315d75;
+  --blueprint-line: #83aebe;
+
+  /* Colores de detalle */
+
+  --construction: #c66f4e;
+  --nature: #879d7d;
+
+  /* Alias para código existente */
+
+  --forest: var(--blueprint);
+  --forest-deep: var(--blueprint-deep);
+  --sage: var(--nature);
+  --terracotta: var(--construction);
+
+  /* Layout */
+
+  --page-gutter: clamp(1.5rem, 1rem + 2.6vw, 4.5rem);
+
+  /* Sistema compacto de tarjetas */
+
+  --card-radius: clamp(1.1rem, 1.5vw, 1.4rem);
+  --card-padding: clamp(1.1rem, 1rem + 0.7vw, 1.6rem);
+  --card-gap: clamp(0.75rem, 0.6rem + 0.5vw, 1.1rem);
 }
 
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
 }
 
 html {
-  min-width: 320px;
   scroll-behavior: smooth;
-  scroll-padding-top: 6rem;
+  background: var(--paper);
 }
 
 body {
   min-height: 100vh;
   margin: 0;
   overflow-x: hidden;
-  background: #f5f0e8;
-  color: #18201d;
-  font-family: var(--font-inter), Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-site-sans), sans-serif;
 }
 
-.container-shell {
-  width: min(
-    calc(100% - (2 * var(--page-gutter))),
-    var(--content-width)
-  );
-  margin-inline: auto;
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
-::selection {
-  background: #a5af93;
-  color: #0e231d;
-}
-
-:focus-visible {
-  outline: 3px solid #b86145;
-  outline-offset: 4px;
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
 }
 
 button,
@@ -70,55 +102,289 @@ select {
   font: inherit;
 }
 
-button {
-  cursor: pointer;
-}
-
 img,
-svg,
-video,
-canvas {
+svg {
   display: block;
-  max-width: 100%;
 }
 
 h1,
 h2,
 h3,
-p {
-  margin-block: 0;
+h4 {
+  text-wrap: balance;
 }
+
+p {
+  text-wrap: pretty;
+}
+
+::selection {
+  background: var(--construction);
+  color: var(--ivory);
+}
+
+:focus-visible {
+  outline: 2px solid var(--construction);
+  outline-offset: 4px;
+}
+
+/* Contenedor general */
+
+.container-shell {
+  width: 100%;
+  max-width: 100rem;
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+/* Superficie clara */
+
+.glass-surface {
+  border: 1px solid rgb(11 38 55 / 10%);
+  background:
+    linear-gradient(
+      135deg,
+      rgb(250 247 239 / 82%),
+      rgb(241 237 228 / 62%)
+    );
+  box-shadow:
+    0 0.9rem 2.5rem rgb(11 38 55 / 8%),
+    inset 0 1px 0 rgb(255 255 255 / 72%);
+  -webkit-backdrop-filter: blur(12px) saturate(115%);
+  backdrop-filter: blur(12px) saturate(115%);
+}
+
+/* Superficie azul */
+
+.glass-surface-dark {
+  border: 1px solid rgb(131 174 190 / 16%);
+  background:
+    linear-gradient(
+      135deg,
+      rgb(22 56 75 / 90%),
+      rgb(11 38 55 / 82%)
+    );
+  box-shadow:
+    0 1rem 3rem rgb(3 19 28 / 20%),
+    inset 0 1px 0 rgb(255 255 255 / 9%);
+  -webkit-backdrop-filter: blur(12px) saturate(112%);
+  backdrop-filter: blur(12px) saturate(112%);
+}
+
+/* Interacciones más discretas */
+
+.glass-interactive {
+  transition:
+    transform 260ms ease,
+    background-color 260ms ease,
+    border-color 260ms ease,
+    box-shadow 260ms ease,
+    filter 260ms ease;
+}
+
+.glass-interactive:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.025);
+}
+
+.glass-interactive:active {
+  transform: translateY(0) scale(0.992);
+}
+
+/* Sistema de tarjetas compactas */
+
+.card-compact {
+  min-height: 0;
+  border-radius: var(--card-radius);
+  padding: var(--card-padding);
+}
+
+.card-grid-compact {
+  display: grid;
+  gap: var(--card-gap);
+}
+
+.card-cover-compact {
+  min-height: 7rem;
+  max-height: 9rem;
+}
+
+.card-title-compact {
+  font-size: clamp(1.05rem, 0.95rem + 0.35vw, 1.35rem);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.card-description-compact {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+/* Detalles visuales reutilizables */
+
+.accent-construction {
+  border-color: rgb(198 111 78 / 42%);
+  color: var(--construction);
+}
+
+.accent-nature {
+  border-color: rgb(135 157 125 / 42%);
+  color: var(--nature);
+}
+
+.accent-blueprint {
+  border-color: rgb(131 174 190 / 34%);
+  color: var(--blueprint-line);
+}
+
+/* Fondo blueprint */
+
+.blueprint-field {
+  background-color: var(--blueprint-deep);
+  background-image:
+    linear-gradient(
+      rgb(131 174 190 / 13%) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgb(131 174 190 / 13%) 1px,
+      transparent 1px
+    ),
+    radial-gradient(
+      circle at 78% 28%,
+      rgb(49 93 117 / 42%),
+      transparent 34%
+    ),
+    linear-gradient(
+      115deg,
+      transparent 20%,
+      rgb(3 19 28 / 62%) 100%
+    );
+  background-size:
+    3rem 3rem,
+    3rem 3rem,
+    100% 100%,
+    100% 100%;
+}
+
+/* Fondo topográfico */
 
 .topographic-field {
   background-image:
     radial-gradient(
-      ellipse at 85% 18%,
-      transparent 0 16%,
-      rgb(245 240 232 / 7%) 16.2% 16.35%,
-      transparent 16.55% 21%,
-      rgb(245 240 232 / 6%) 21.2% 21.35%,
-      transparent 21.55% 27%,
-      rgb(245 240 232 / 5%) 27.2% 27.35%,
-      transparent 27.55%
+      circle at 87% 45%,
+      transparent 0 21%,
+      rgb(131 174 190 / 14%) 21.15%,
+      transparent 21.45%
     ),
-    linear-gradient(
-      105deg,
-      transparent 0 49.9%,
-      rgb(245 240 232 / 4%) 50%,
-      transparent 50.1%
+    radial-gradient(
+      circle at 87% 45%,
+      transparent 0 31%,
+      rgb(131 174 190 / 11%) 31.15%,
+      transparent 31.45%
+    ),
+    radial-gradient(
+      circle at 87% 45%,
+      transparent 0 42%,
+      rgb(131 174 190 / 9%) 42.15%,
+      transparent 42.45%
+    ),
+    radial-gradient(
+      circle at 12% 88%,
+      transparent 0 18%,
+      rgb(198 111 78 / 9%) 18.15%,
+      transparent 18.45%
     );
-  background-size: 100% 100%, 5rem 5rem;
 }
+
+/* Rejilla arquitectónica */
 
 .architectural-grid {
+  background-color: var(--blueprint);
   background-image:
-    linear-gradient(rgb(165 175 147 / 8%) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(165 175 147 / 8%) 1px, transparent 1px),
-    radial-gradient(circle at 50% 40%, #27493d 0%, #17352b 45%, #0e231d 100%);
-  background-size: 2rem 2rem, 2rem 2rem, 100% 100%;
+    linear-gradient(
+      rgb(131 174 190 / 8%) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgb(131 174 190 / 8%) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      145deg,
+      rgb(49 93 117 / 24%),
+      transparent 48%
+    );
+  background-size:
+    3.25rem 3.25rem,
+    3.25rem 3.25rem,
+    100% 100%;
 }
 
+/* Scrollbar */
+
+::-webkit-scrollbar {
+  width: 0.65rem;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--paper);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid var(--paper);
+  border-radius: 999px;
+  background: var(--blueprint-soft);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--construction);
+}
+
+/* Navegación mediante anclas */
+
+section[id] {
+  scroll-margin-top: 7rem;
+}
+
+/* Fallback de glassmorphism */
+
+@supports not (
+  (backdrop-filter: blur(1rem)) or
+  (-webkit-backdrop-filter: blur(1rem))
+) {
+  .glass-surface {
+    background: rgb(250 247 239 / 97%);
+  }
+
+  .glass-surface-dark {
+    background: rgb(11 38 55 / 97%);
+  }
+}
+
+/* Menor carga visual y gráfica en teléfonos */
+
+@media (max-width: 48rem) {
+  .glass-surface,
+  .glass-surface-dark {
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+
+  .card-compact {
+    padding: 1.1rem;
+  }
+}
+
+/* Accesibilidad */
+
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
