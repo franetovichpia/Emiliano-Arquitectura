@@ -1,3 +1,4 @@
+import { ObjectId } from "mongodb";
 import type { Collection, WithId } from "mongodb";
 
 import { requireAdminSession } from "@/lib/auth/session";
@@ -8,6 +9,9 @@ import type {
   BimConstructionProgress,
   Project,
   ProjectCategory,
+  ProjectMedia,
+  ProjectStatus,
+  ZodiacSign,
 } from "@/lib/db/schemas";
 
 export async function getProjectsCollection(): Promise<
@@ -79,4 +83,126 @@ export async function getAdminProjectBySlug(
 
   const projects = await getProjectsCollection();
   return projects.findOne({ slug });
+}
+
+export type AdminProjectsSort =
+  | "newest"
+  | "oldest"
+  | "title-asc"
+  | "title-desc";
+
+type ListAdminProjectsOptions = {
+  status?: ProjectStatus;
+  sort?: AdminProjectsSort;
+};
+
+const sortDefinitions: Record<
+  AdminProjectsSort,
+  Record<string, 1 | -1>
+> = {
+  newest: { createdAt: -1 },
+  oldest: { createdAt: 1 },
+  "title-asc": { title: 1 },
+  "title-desc": { title: -1 },
+};
+
+export async function listAdminProjects(
+  options: ListAdminProjectsOptions = {},
+): Promise<WithId<Project>[]> {
+  const projects = await getProjectsCollection();
+
+  const filter = options.status
+    ? { status: options.status }
+    : {};
+
+  const sort =
+    sortDefinitions[options.sort ?? "newest"];
+
+  return projects
+    .find(filter)
+    .collation({ locale: "es", strength: 2 })
+    .sort(sort)
+    .toArray();
+}
+
+export async function getAdminProjectById(
+  id: string,
+): Promise<WithId<Project> | null> {
+  const projects = await getProjectsCollection();
+  return projects.findOne({ _id: new ObjectId(id) });
+}
+
+export async function listProjectCategories(): Promise<
+  WithId<ProjectCategory>[]
+> {
+  const categories = await getProjectCategoriesCollection();
+  return categories.find({}).sort({ sortOrder: 1 }).toArray();
+}
+
+type CreateProjectInput = {
+  slug: string;
+  title: string;
+  categorySlug: string;
+  zodiacSign?: ZodiacSign;
+  createdBy?: string;
+};
+
+export async function createProject(
+  input: CreateProjectInput,
+): Promise<WithId<Project>> {
+  const projects = await getProjectsCollection();
+  const now = new Date();
+
+  const doc: Project = {
+    slug: input.slug,
+    title: input.title,
+    categorySlug: input.categorySlug,
+    zodiacSign: input.zodiacSign,
+    status: "borrador",
+    hasIfc: false,
+    media: [],
+    sortOrder: 0,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const result = await projects.insertOne(doc);
+
+  return { _id: result.insertedId, ...doc };
+}
+
+export async function updateProjectStatus(
+  id: string,
+  status: ProjectStatus,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+  const now = new Date();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        status,
+        updatedAt: now,
+        ...(status === "publicado"
+          ? { publishedAt: now }
+          : {}),
+      },
+    },
+  );
+}
+
+export async function addProjectMedia(
+  id: string,
+  media: ProjectMedia,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $push: { media },
+      $set: { updatedAt: new Date() },
+    },
+  );
 }
