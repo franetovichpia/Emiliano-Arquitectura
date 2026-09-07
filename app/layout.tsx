@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     template: "%s | Emiliano Gabriel Rossotti",
   },
   description:
-    "Arquitecto UBA, asesor BIM y Maestro Mayor de Obras. Consultoría en proyectos participativos, viviendas soberanas y procesos OpenBIM.",
+    "Arquitecto UBA, asesor BIM y Maestro Mayor de Obras. Consultoría en proyectos integrativos, viviendas soberanas y procesos OpenBIM.",
 };
 
 type RootLayoutProps = Readonly<{
@@ -50,7 +50,10 @@ export default function RootLayout({
   children,
 }: RootLayoutProps) {
   return (
-    <html lang="es">
+    <html 
+      data-scroll-behavior="smooth"
+      lang="es"
+    >
       <body
         className={`${montserrat.variable} ${boska.variable} bg-paper font-sans text-ink antialiased`}
       >

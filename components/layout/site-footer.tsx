@@ -4,12 +4,12 @@ import {
   ArrowUpRight,
   PanelsTopLeft,
 } from "lucide-react";
-import { 
+import {
+  FaFacebookF,
   FaLinkedinIn,
-  FaFacebookF,  
 } from "react-icons/fa";
 
-import { Container } from "@/components/ui/container";
+import { Container } from "@/app/container";
 import {
   footerNavigation,
   mainNavigation,
@@ -34,6 +34,7 @@ function ProfessionalIcon({
       />
     );
   }
+
   if (icon === "facebook") {
     return (
       <FaFacebookF
@@ -93,7 +94,7 @@ export function SiteFooter() {
               </Link>
 
               <p className="mt-10 max-w-xl font-sans text-[clamp(1.45rem,2.5vw,2.6rem)] font-light leading-relaxed tracking-[-0.025em] text-paper">
-                Consultor en Proyectos Participativos y Soberanos.
+                Consultor en Proyectos Integrativos y Soberanos.
               </p>
 
               <p className="mt-7 max-w-lg text-sm leading-7 text-ivory/45">
@@ -224,14 +225,43 @@ export function SiteFooter() {
           </div>
 
           {/* Parte inferior */}
-          <div className="mt-14 flex flex-col gap-5 border-t border-white/10 pt-7 text-[0.6rem] uppercase tracking-[0.13em] text-ivory/25 sm:flex-row sm:items-center sm:justify-between">
-            <p>
+          <div className="mt-14 flex flex-col gap-5 border-t border-white/10 pt-7 text-[0.6rem] tracking-[0.13em] text-ivory/25 sm:flex-row sm:items-center sm:justify-between">
+            <p className="uppercase">
               © {currentYear} Emiliano Gabriel Rossotti
             </p>
 
-            <p>
-              Todos los derechos reservados
-            </p>
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
+              <p className="uppercase">
+                Todos los derechos reservados
+              </p>
+
+              <span
+                aria-hidden="true"
+                className="hidden h-3 w-px bg-white/15 sm:block"
+              />
+
+              <Link
+                aria-label="Visitar el portfolio de Novaire Studio"
+                className="group inline-flex items-center gap-2 uppercase text-ivory/35 transition-colors duration-300 hover:text-sage"
+                href="https://novaire-psi.vercel.app/"
+                rel="noreferrer"
+                target="_blank"
+              >
+                <span>
+                  Desarrollado por{" "}
+                  <strong className="font-semibold text-ivory/55 transition-colors duration-300 group-hover:text-sage">
+                    Novaire Studio
+                  </strong>
+                </span>
+
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  size={13}
+                  strokeWidth={1.6}
+                />
+              </Link>
+            </div>
           </div>
         </div>
       </Container>

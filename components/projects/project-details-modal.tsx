@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpRight,
+  Boxes,
   X,
 } from "lucide-react";
 import {
@@ -26,9 +27,11 @@ export function ProjectDetailsModal({
   project,
   onClose,
 }: ProjectDetailsModalProps) {
-  const dialogRef = useRef<HTMLDivElement>(null);
+  const dialogRef =
+    useRef<HTMLDivElement | null>(null);
+
   const closeButtonRef =
-    useRef<HTMLButtonElement>(null);
+    useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (!project) {
@@ -114,7 +117,6 @@ export function ProjectDetailsModal({
       {project ? (
         <motion.div
           animate={{ opacity: 1 }}
-          aria-hidden="true"
           className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-blueprint-deep/85 p-3 backdrop-blur-md sm:p-6"
           exit={{ opacity: 0 }}
           initial={{ opacity: 0 }}
@@ -234,21 +236,39 @@ export function ProjectDetailsModal({
                   </ul>
                 </div>
 
-                <Link
-                  className="group mt-9 inline-flex w-fit items-center gap-3 rounded-full bg-terracotta px-5 py-3 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-ivory transition hover:-translate-y-0.5 hover:bg-terracotta/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-4"
-                  href={project.behanceUrl}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  Ver proyecto en Behance
+                <div className="mt-9 flex flex-wrap gap-3">
+                  {project.bimSlug ? (
+                    <Link
+                      className="group inline-flex min-h-11 items-center gap-3 rounded-full bg-blueprint-deep px-5 text-[0.6rem] font-semibold uppercase tracking-[0.15em] !text-white transition hover:-translate-y-0.5 hover:bg-blueprint-deep/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blueprint-deep focus-visible:ring-offset-4"
+                      href={`/modelos/${project.bimSlug}`}
+                      style={{ color: "#ffffff" }}
+                    >
+                      <Boxes
+                        aria-hidden="true"
+                        size={15}
+                        strokeWidth={1.5}
+                      />
 
-                  <ArrowUpRight
-                    aria-hidden="true"
-                    className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                    size={15}
-                    strokeWidth={1.5}
-                  />
-                </Link>
+                      Ver modelo 3D
+                    </Link>
+                  ) : null}
+
+                  <Link
+                    className="group inline-flex min-h-11 items-center gap-3 rounded-full bg-terracotta px-5 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-ivory transition hover:-translate-y-0.5 hover:bg-terracotta/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-4"
+                    href={project.behanceUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Ver en Behance
+
+                    <ArrowUpRight
+                      aria-hidden="true"
+                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                      size={15}
+                      strokeWidth={1.5}
+                    />
+                  </Link>
+                </div>
               </div>
             </div>
           </motion.div>

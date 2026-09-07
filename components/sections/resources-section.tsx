@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 
 import { Reveal } from "@/components/motion/reveal";
-import { Container } from "@/components/ui/container";
+import { Container } from "@/app/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import {
   resources,

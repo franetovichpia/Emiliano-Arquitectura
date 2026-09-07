@@ -5,14 +5,14 @@ import {
 
 import { ContactForm } from "@/components/forms/contact-form";
 import { Reveal } from "@/components/motion/reveal";
-import { Container } from "@/components/ui/container";
+import { Container } from "@/app/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 const contactAreas = [
   "Proyectos integrales",
   "Dirección y documentación de obra",
   "Consultoría e implementación BIM",
-  "Proyectos participativos y soberanos",
+  "Proyectos integrativos y soberanos",
 ] as const;
 
 export function ContactSection() {

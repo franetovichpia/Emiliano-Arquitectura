@@ -29,19 +29,19 @@ export const mainNavigation: readonly NavigationItem[] = [
 export const communityNavigation: readonly NavigationItem[] = [
   {
     label: "Inicio",
-    href: "/proyectos-comunitarios#inicio-comunitario",
+    href: "/proyectos-integrativos#inicio-integrativo",
   },
   {
     label: "Propuestas",
-    href: "/proyectos-comunitarios#proyectos",
+    href: "/proyectos-integrativos#proyectos",
   },
   {
     label: "Proyectos relacionados",
-    href: "/proyectos-comunitarios#contenido-soberano",
+    href: "/proyectos-integrativos#contenido-soberano",
   },
   {
     label: "Recursos",
-    href: "/proyectos-comunitarios#recursos",
+    href: "/proyectos-integrativos#recursos",
   },
 ];
 
@@ -55,11 +55,11 @@ export const footerNavigation: readonly NavigationItem[] = [
     href: "/#proyectos-profesionales",
   },
   {
-    label: "Proyectos comunitarios",
-    href: "/proyectos-comunitarios",
+    label: "Proyectos integrativos",
+    href: "/proyectos-integrativos",
   },
   {
     label: "Recursos",
-    href: "/proyectos-comunitarios#recursos",
+    href: "/proyectos-integrativos#recursos",
   },
 ];

@@ -14,6 +14,7 @@ export type ProfessionalProject = {
   coverImage: string;
   coverAlt: string;
   behanceUrl: string;
+  bimSlug?: string;
   tools: readonly string[];
   facts: readonly ProfessionalProjectFact[];
 };
@@ -109,6 +110,7 @@ export const professionalProjects: readonly ProfessionalProject[] = [
       "Visualización arquitectónica del proyecto Art Studio",
     behanceUrl:
       "https://www.behance.net/gallery/183694127/Art-Studio",
+    bimSlug: "crea-studios",
     tools: [
       "Autodesk Revit",
       "Lumion",
@@ -218,7 +220,8 @@ export const professionalProjects: readonly ProfessionalProject[] = [
     year: "2023",
     summary:
       "Trabajo de modelado 3D y documentación BIM aplicado a sistemas arquitectónicos, mecánicos y eléctricos.",
-    coverImage: "/images/projects/bim-documentation.webp",
+    coverImage:
+      "/images/projects/bim-documentation.webp",
     coverAlt:
       "Planos y documentación técnica del proyecto BIM Documentation",
     behanceUrl:

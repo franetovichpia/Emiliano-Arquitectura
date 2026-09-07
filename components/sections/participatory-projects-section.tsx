@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 import { Reveal } from "@/components/motion/reveal";
-import { Container } from "@/components/ui/container";
+import { Container } from "@/app/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import {
   participatoryProjects,
@@ -77,7 +77,7 @@ export function ParticipatoryProjectsSection() {
     <section
       aria-labelledby="participatory-projects-heading"
       className="relative overflow-hidden bg-ivory text-forest-deep"
-      id="proyectos-participativos"
+      id="proyectos-integrativos"
     >
       <div
         aria-hidden="true"
@@ -97,7 +97,7 @@ export function ParticipatoryProjectsSection() {
               <SectionHeading
                 eyebrow="Comunidad y territorio"
                 id="participatory-projects-heading"
-                title="Proyectos participativos."
+                title="Proyectos integrativos."
               />
             </Reveal>
           </div>
@@ -254,3 +254,4 @@ export function ParticipatoryProjectsSection() {
     </section>
   );
 }
+

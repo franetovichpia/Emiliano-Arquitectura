@@ -12,7 +12,7 @@ import {
 } from "react";
 
 import { ButtonLink } from "@/components/ui/button-link";
-import { Container } from "@/components/ui/container";
+import { Container } from "@/app/container";
 import {
   communityNavigation,
   mainNavigation,
@@ -30,7 +30,7 @@ export function SiteHeader() {
 
   const isCommunityPage =
     pathname.startsWith(
-      "/proyectos-comunitarios",
+      "/proyectos-integrativos",
     );
 
   const navigation = isCommunityPage
@@ -48,7 +48,7 @@ export function SiteHeader() {
       };
 
   const mobileMenuTitle = isCommunityPage
-    ? "Proyectos comunitarios"
+    ? "Proyectos integrativos"
     : "Navegación profesional";
 
   useEffect(() => {
@@ -149,7 +149,7 @@ export function SiteHeader() {
           <nav
             aria-label={
               isCommunityPage
-                ? "Navegación de proyectos comunitarios"
+                ? "Navegación de proyectos integrativos"
                 : "Navegación profesional"
             }
             className="hidden lg:block"
@@ -226,7 +226,7 @@ export function SiteHeader() {
               <nav
                 aria-label={
                   isCommunityPage
-                    ? "Navegación móvil comunitaria"
+                    ? "Navegación móvil de proyectos integrativos"
                     : "Navegación móvil profesional"
                 }
                 className="p-4 sm:p-5"

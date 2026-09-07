@@ -3,16 +3,20 @@
 import { useState } from "react";
 import {
   useForm,
+  useWatch,
   type SubmitHandler,
 } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CheckCircle2,
+  CircleAlert,
   Send,
 } from "lucide-react";
 
 import {
+  CONTACT_LIMITS,
   contactSchema,
+  contactServiceOptions,
   type ContactFormValues,
 } from "@/lib/validations/contact";
 import { cn } from "@/utils/cn";
@@ -24,19 +28,78 @@ const labelClasses =
   "mb-3 block text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-sage";
 
 const errorClasses =
-  "mt-2 text-xs leading-5 text-[#ffb5a0]";
+  "text-xs leading-5 text-[#ffb5a0]";
 
 type SubmissionStatus =
   | "idle"
-  | "validated";
+  | "success"
+  | "error";
+
+type CharacterCountProps = {
+  current: number;
+  maximum: number;
+  id: string;
+};
+
+function CharacterCount({
+  current,
+  maximum,
+  id,
+}: CharacterCountProps) {
+  const isNearLimit =
+    current >= maximum * 0.9;
+
+  return (
+    <span
+      className={cn(
+        "ml-auto shrink-0 text-[0.65rem] tabular-nums text-ivory/30",
+        isNearLimit &&
+          "text-[#ffb5a0]",
+      )}
+      id={id}
+    >
+      {current}/{maximum}
+    </span>
+  );
+}
+
+function getResponseMessage(
+  payload: unknown,
+) {
+  if (
+    !payload ||
+    typeof payload !== "object"
+  ) {
+    return null;
+  }
+
+  const message = (
+    payload as {
+      message?: unknown;
+    }
+  ).message;
+
+  return typeof message === "string"
+    ? message
+    : null;
+}
 
 export function ContactForm() {
-  const [submissionStatus, setSubmissionStatus] =
-    useState<SubmissionStatus>("idle");
+  const [
+    submissionStatus,
+    setSubmissionStatus,
+  ] = useState<SubmissionStatus>("idle");
+
+  const [
+    submissionMessage,
+    setSubmissionMessage,
+  ] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
+    reset,
+    control,
     formState: {
       errors,
       isSubmitting,
@@ -51,19 +114,111 @@ export function ContactForm() {
       service: "",
       message: "",
       consent: false,
+      website: "",
     },
   });
 
-  const onSubmit: SubmitHandler<ContactFormValues> = () => {
-    setSubmissionStatus("validated");
+  const nameValue =
+    useWatch({
+      control,
+      name: "name",
+    }) ?? "";
+
+  const emailValue =
+    useWatch({
+      control,
+      name: "email",
+    }) ?? "";
+
+  const organizationValue =
+    useWatch({
+      control,
+      name: "organization",
+    }) ?? "";
+
+  const messageValue =
+    useWatch({
+      control,
+      name: "message",
+    }) ?? "";
+
+  const onSubmit: SubmitHandler<
+    ContactFormValues
+  > = async (values) => {
+    setSubmissionStatus("idle");
+    setSubmissionMessage(null);
+
+    try {
+      const response = await fetch(
+        "/api/contact",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify(values),
+        },
+      );
+
+      const payload: unknown =
+        await response
+          .json()
+          .catch(() => null);
+
+      const responseMessage =
+        getResponseMessage(payload);
+
+      if (!response.ok) {
+        throw new Error(
+          responseMessage ??
+            "No fue posible enviar la consulta.",
+        );
+      }
+
+      setSubmissionStatus("success");
+
+      setSubmissionMessage(
+        responseMessage ??
+          "Tu consulta fue enviada correctamente.",
+      );
+
+      reset();
+    } catch (error: unknown) {
+      setSubmissionStatus("error");
+
+      setSubmissionMessage(
+        error instanceof Error
+          ? error.message
+          : "No fue posible enviar la consulta. Intentá nuevamente.",
+      );
+    }
   };
 
   return (
     <form
-      className="rounded-[2rem] border border-white/15 bg-white/[0.06] p-6 shadow-[0_2rem_6rem_rgb(0_0_0/0.2)] backdrop-blur-2xl sm:p-8 lg:p-10"
+      className="relative rounded-[2rem] border border-white/15 bg-white/[0.06] p-6 shadow-[0_2rem_6rem_rgb(0_0_0/0.2)] backdrop-blur-2xl sm:p-8 lg:p-10"
       noValidate
       onSubmit={handleSubmit(onSubmit)}
     >
+      {/* Campo antispam */}
+      <div
+        aria-hidden="true"
+        className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden"
+      >
+        <label htmlFor="contact-website">
+          Sitio web
+        </label>
+
+        <input
+          autoComplete="off"
+          id="contact-website"
+          tabIndex={-1}
+          type="text"
+          {...register("website")}
+        />
+      </div>
+
       <div className="flex items-start justify-between gap-6">
         <div>
           <p className="text-[0.65rem] font-semibold uppercase tracking-[0.17em] text-terracotta">
@@ -96,27 +251,42 @@ export function ContactForm() {
           <input
             aria-describedby={
               errors.name
-                ? "contact-name-error"
-                : undefined
+                ? "contact-name-error contact-name-count"
+                : "contact-name-count"
             }
-            aria-invalid={Boolean(errors.name)}
+            aria-invalid={Boolean(
+              errors.name,
+            )}
             autoComplete="name"
             className={inputClasses}
             id="contact-name"
+            maxLength={
+              CONTACT_LIMITS.name
+            }
             placeholder="Tu nombre"
             type="text"
             {...register("name")}
           />
 
-          {errors.name ? (
-            <p
-              className={errorClasses}
-              id="contact-name-error"
-              role="alert"
-            >
-              {errors.name.message}
-            </p>
-          ) : null}
+          <div className="mt-2 flex min-h-5 items-start gap-3">
+            {errors.name ? (
+              <p
+                className={errorClasses}
+                id="contact-name-error"
+                role="alert"
+              >
+                {errors.name.message}
+              </p>
+            ) : null}
+
+            <CharacterCount
+              current={nameValue.length}
+              id="contact-name-count"
+              maximum={
+                CONTACT_LIMITS.name
+              }
+            />
+          </div>
         </div>
 
         {/* Correo */}
@@ -131,28 +301,43 @@ export function ContactForm() {
           <input
             aria-describedby={
               errors.email
-                ? "contact-email-error"
-                : undefined
+                ? "contact-email-error contact-email-count"
+                : "contact-email-count"
             }
-            aria-invalid={Boolean(errors.email)}
+            aria-invalid={Boolean(
+              errors.email,
+            )}
             autoComplete="email"
             className={inputClasses}
             id="contact-email"
             inputMode="email"
+            maxLength={
+              CONTACT_LIMITS.email
+            }
             placeholder="nombre@correo.com"
             type="email"
             {...register("email")}
           />
 
-          {errors.email ? (
-            <p
-              className={errorClasses}
-              id="contact-email-error"
-              role="alert"
-            >
-              {errors.email.message}
-            </p>
-          ) : null}
+          <div className="mt-2 flex min-h-5 items-start gap-3">
+            {errors.email ? (
+              <p
+                className={errorClasses}
+                id="contact-email-error"
+                role="alert"
+              >
+                {errors.email.message}
+              </p>
+            ) : null}
+
+            <CharacterCount
+              current={emailValue.length}
+              id="contact-email-count"
+              maximum={
+                CONTACT_LIMITS.email
+              }
+            />
+          </div>
         </div>
 
         {/* Organización */}
@@ -167,27 +352,49 @@ export function ContactForm() {
           <input
             aria-describedby={
               errors.organization
-                ? "contact-organization-error"
-                : undefined
+                ? "contact-organization-error contact-organization-count"
+                : "contact-organization-count"
             }
-            aria-invalid={Boolean(errors.organization)}
+            aria-invalid={Boolean(
+              errors.organization,
+            )}
             autoComplete="organization"
             className={inputClasses}
             id="contact-organization"
+            maxLength={
+              CONTACT_LIMITS.organization
+            }
             placeholder="Empresa, estudio o comunidad"
             type="text"
-            {...register("organization")}
+            {...register(
+              "organization",
+            )}
           />
 
-          {errors.organization ? (
-            <p
-              className={errorClasses}
-              id="contact-organization-error"
-              role="alert"
-            >
-              {errors.organization.message}
-            </p>
-          ) : null}
+          <div className="mt-2 flex min-h-5 items-start gap-3">
+            {errors.organization ? (
+              <p
+                className={errorClasses}
+                id="contact-organization-error"
+                role="alert"
+              >
+                {
+                  errors.organization
+                    .message
+                }
+              </p>
+            ) : null}
+
+            <CharacterCount
+              current={
+                organizationValue.length
+              }
+              id="contact-organization-count"
+              maximum={
+                CONTACT_LIMITS.organization
+              }
+            />
+          </div>
         </div>
 
         {/* Tipo de consulta */}
@@ -205,7 +412,9 @@ export function ContactForm() {
                 ? "contact-service-error"
                 : undefined
             }
-            aria-invalid={Boolean(errors.service)}
+            aria-invalid={Boolean(
+              errors.service,
+            )}
             className={cn(
               inputClasses,
               "appearance-none",
@@ -220,65 +429,30 @@ export function ContactForm() {
               Seleccionar
             </option>
 
-            <option
-              className="bg-forest-deep text-paper"
-              value="proyecto-integral"
-            >
-              Proyecto integral
-            </option>
-
-            <option
-              className="bg-forest-deep text-paper"
-              value="direccion-obra"
-            >
-              Dirección de obra
-            </option>
-
-            <option
-              className="bg-forest-deep text-paper"
-              value="documentacion"
-            >
-              Documentación técnica
-            </option>
-
-            <option
-              className="bg-forest-deep text-paper"
-              value="consultoria-bim"
-            >
-              Consultoría BIM
-            </option>
-
-            <option
-              className="bg-forest-deep text-paper"
-              value="implementacion-bim"
-            >
-              Implementación BIM
-            </option>
-
-            <option
-              className="bg-forest-deep text-paper"
-              value="formacion-bim"
-            >
-              Formación BIM
-            </option>
-
-            <option
-              className="bg-forest-deep text-paper"
-              value="otro"
-            >
-              Otra consulta
-            </option>
+            {contactServiceOptions.map(
+              (option) => (
+                <option
+                  className="bg-forest-deep text-paper"
+                  key={option.value}
+                  value={option.value}
+                >
+                  {option.label}
+                </option>
+              ),
+            )}
           </select>
 
-          {errors.service ? (
-            <p
-              className={errorClasses}
-              id="contact-service-error"
-              role="alert"
-            >
-              {errors.service.message}
-            </p>
-          ) : null}
+          <div className="mt-2 min-h-5">
+            {errors.service ? (
+              <p
+                className={errorClasses}
+                id="contact-service-error"
+                role="alert"
+              >
+                {errors.service.message}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -294,36 +468,51 @@ export function ContactForm() {
         <textarea
           aria-describedby={
             errors.message
-              ? "contact-message-error"
-              : "contact-message-help"
+              ? "contact-message-error contact-message-count"
+              : "contact-message-help contact-message-count"
           }
-          aria-invalid={Boolean(errors.message)}
+          aria-invalid={Boolean(
+            errors.message,
+          )}
           className={cn(
             inputClasses,
             "min-h-44 resize-y py-4 leading-7",
           )}
           id="contact-message"
+          maxLength={
+            CONTACT_LIMITS.message
+          }
           placeholder="Contanos brevemente qué necesitás, el tipo de proyecto y sus objetivos."
           rows={7}
           {...register("message")}
         />
 
-        {errors.message ? (
-          <p
-            className={errorClasses}
-            id="contact-message-error"
-            role="alert"
-          >
-            {errors.message.message}
-          </p>
-        ) : (
-          <p
-            className="mt-2 text-xs text-ivory/30"
-            id="contact-message-help"
-          >
-            Mínimo 20 caracteres.
-          </p>
-        )}
+        <div className="mt-2 flex min-h-5 items-start gap-3">
+          {errors.message ? (
+            <p
+              className={errorClasses}
+              id="contact-message-error"
+              role="alert"
+            >
+              {errors.message.message}
+            </p>
+          ) : (
+            <p
+              className="text-xs leading-5 text-ivory/30"
+              id="contact-message-help"
+            >
+              Mínimo 20 caracteres.
+            </p>
+          )}
+
+          <CharacterCount
+            current={messageValue.length}
+            id="contact-message-count"
+            maximum={
+              CONTACT_LIMITS.message
+            }
+          />
+        </div>
       </div>
 
       {/* Consentimiento */}
@@ -335,21 +524,25 @@ export function ContactForm() {
                 ? "contact-consent-error"
                 : undefined
             }
-            aria-invalid={Boolean(errors.consent)}
+            aria-invalid={Boolean(
+              errors.consent,
+            )}
             className="mt-1 size-4 shrink-0 accent-terracotta"
             type="checkbox"
             {...register("consent")}
           />
 
           <span className="text-xs leading-6 text-ivory/50">
-            Acepto que los datos ingresados sean utilizados para responder esta
-            consulta.
+            Acepto que los datos ingresados sean utilizados para responder esta consulta.
           </span>
         </label>
 
         {errors.consent ? (
           <p
-            className={errorClasses}
+            className={cn(
+              errorClasses,
+              "mt-2",
+            )}
             id="contact-consent-error"
             role="alert"
           >
@@ -358,30 +551,49 @@ export function ContactForm() {
         ) : null}
       </div>
 
-      {/* Estado de desarrollo */}
-      {submissionStatus === "validated" ? (
+      {/* Resultado */}
+      {submissionStatus !== "idle" &&
+      submissionMessage ? (
         <div
-          className="mt-7 flex items-start gap-3 rounded-2xl border border-sage/25 bg-sage/10 p-4 text-sm leading-6 text-sage"
-          role="status"
+          className={cn(
+            "mt-7 flex items-start gap-3 rounded-2xl border p-4 text-sm leading-6",
+            submissionStatus ===
+              "success"
+              ? "border-sage/25 bg-sage/10 text-sage"
+              : "border-[#ffb5a0]/25 bg-[#ffb5a0]/10 text-[#ffb5a0]",
+          )}
+          role={
+            submissionStatus ===
+            "success"
+              ? "status"
+              : "alert"
+          }
         >
-          <CheckCircle2
-            aria-hidden="true"
-            className="mt-0.5 shrink-0"
-            size={18}
-            strokeWidth={1.6}
-          />
+          {submissionStatus ===
+          "success" ? (
+            <CheckCircle2
+              aria-hidden="true"
+              className="mt-0.5 shrink-0"
+              size={18}
+              strokeWidth={1.6}
+            />
+          ) : (
+            <CircleAlert
+              aria-hidden="true"
+              className="mt-0.5 shrink-0"
+              size={18}
+              strokeWidth={1.6}
+            />
+          )}
 
-          <p>
-            Los datos son válidos. El envío se activará cuando conectemos el
-            servicio de correo.
-          </p>
+          <p>{submissionMessage}</p>
         </div>
       ) : null}
 
       {/* Envío */}
       <div className="mt-8 flex flex-col gap-4 border-t border-white/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-xs text-[0.62rem] uppercase leading-5 tracking-[0.12em] text-ivory/30">
-          Integración de correo pendiente
+          Los campos marcados con * son obligatorios
         </p>
 
         <button
@@ -391,17 +603,30 @@ export function ContactForm() {
         >
           <span>
             {isSubmitting
-              ? "Validando"
-              : "Validar consulta"}
+              ? "Enviando"
+              : "Enviar consulta"}
           </span>
 
-          <Send
-            aria-hidden="true"
-            size={16}
-            strokeWidth={1.6}
-          />
+          {isSubmitting ? (
+            <Loader2Icon />
+          ) : (
+            <Send
+              aria-hidden="true"
+              size={16}
+              strokeWidth={1.6}
+            />
+          )}
         </button>
       </div>
     </form>
+  );
+}
+
+function Loader2Icon() {
+  return (
+    <span
+      aria-hidden="true"
+      className="size-4 animate-spin rounded-full border-2 border-white/35 border-t-white"
+    />
   );
 }

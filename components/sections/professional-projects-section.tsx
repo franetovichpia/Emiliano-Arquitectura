@@ -3,7 +3,7 @@ import { ArrowUpRight } from "lucide-react";
 
 import { Reveal } from "@/components/motion/reveal";
 import { ProjectCarousel } from "@/components/projects/project-carousel";
-import { Container } from "@/components/ui/container";
+import { Container } from "@/app/container";
 import { professionalProjects } from "@/data/professional-projects";
 
 export function ProfessionalProjectsSection() {

@@ -1,0 +1,278 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowUpRight,
+  Boxes,
+  X,
+} from "lucide-react";
+import {
+  AnimatePresence,
+  motion,
+} from "motion/react";
+import {
+  useEffect,
+  useRef,
+} from "react";
+
+import type { ProfessionalProject } from "@/data/professional-projects";
+
+type ProjectDetailsModalProps = {
+  project: ProfessionalProject | null;
+  onClose: () => void;
+};
+
+export function ProjectDetailsModal({
+  project,
+  onClose,
+}: ProjectDetailsModalProps) {
+  const dialogRef =
+    useRef<HTMLDivElement | null>(null);
+
+  const closeButtonRef =
+    useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!project) {
+      return;
+    }
+
+    const previousActiveElement =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+
+    const previousOverflow =
+      document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (
+        event.key !== "Tab" ||
+        !dialogRef.current
+      ) {
+        return;
+      }
+
+      const focusableElements =
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+
+      const firstElement = focusableElements[0];
+      const lastElement =
+        focusableElements[
+          focusableElements.length - 1
+        ];
+
+      if (!firstElement || !lastElement) {
+        return;
+      }
+
+      if (
+        event.shiftKey &&
+        document.activeElement === firstElement
+      ) {
+        event.preventDefault();
+        lastElement.focus();
+      }
+
+      if (
+        !event.shiftKey &&
+        document.activeElement === lastElement
+      ) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    }
+
+    document.addEventListener(
+      "keydown",
+      handleKeyDown,
+    );
+
+    return () => {
+      document.body.style.overflow =
+        previousOverflow;
+
+      document.removeEventListener(
+        "keydown",
+        handleKeyDown,
+      );
+
+      previousActiveElement?.focus();
+    };
+  }, [onClose, project]);
+
+  return (
+    <AnimatePresence>
+      {project ? (
+        <motion.div
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-blueprint-deep/85 p-3 backdrop-blur-md sm:p-6"
+          exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }}
+          onMouseDown={(event) => {
+            if (
+              event.currentTarget === event.target
+            ) {
+              onClose();
+            }
+          }}
+        >
+          <motion.div
+            animate={{
+              opacity: 1,
+              y: 0,
+              scale: 1,
+            }}
+            aria-labelledby="project-modal-title"
+            aria-modal="true"
+            className="relative my-auto w-full max-w-5xl overflow-hidden rounded-[1.5rem] border border-white/15 bg-paper text-forest-deep shadow-[0_2rem_8rem_rgb(0_0_0/0.35)]"
+            exit={{
+              opacity: 0,
+              y: 18,
+              scale: 0.98,
+            }}
+            initial={{
+              opacity: 0,
+              y: 24,
+              scale: 0.98,
+            }}
+            ref={dialogRef}
+            role="dialog"
+            transition={{
+              duration: 0.28,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+          >
+            <button
+              aria-label="Cerrar detalles del proyecto"
+              className="absolute right-4 top-4 z-20 grid size-10 place-items-center rounded-full border border-white/20 bg-blueprint-deep/75 text-ivory backdrop-blur-md transition-colors hover:bg-blueprint-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
+              onClick={onClose}
+              ref={closeButtonRef}
+              type="button"
+            >
+              <X
+                aria-hidden="true"
+                size={18}
+                strokeWidth={1.5}
+              />
+            </button>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12">
+              <div className="relative min-h-64 overflow-hidden bg-blueprint-deep lg:col-span-7 lg:min-h-[38rem]">
+                <Image
+                  alt={project.coverAlt}
+                  className="object-cover"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 58vw"
+                  src={project.coverImage}
+                />
+
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,rgb(11_38_55/0.65)_100%)]"
+                />
+
+                <span className="absolute bottom-5 left-5 rounded-full border border-white/20 bg-blueprint-deep/65 px-4 py-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-ivory backdrop-blur-md">
+                  Proyecto {project.number}
+                </span>
+              </div>
+
+              <div className="flex flex-col p-6 sm:p-8 lg:col-span-5 lg:p-10">
+                <p className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-terracotta">
+                  {project.category}
+                </p>
+
+                <h2
+                  className="mt-4 font-sans text-3xl font-light leading-tight tracking-[-0.035em] text-forest-deep sm:text-4xl"
+                  id="project-modal-title"
+                >
+                  {project.title}
+                </h2>
+
+                <p className="mt-5 text-sm leading-7 text-forest-deep/65">
+                  {project.summary}
+                </p>
+
+                <dl className="mt-8 grid grid-cols-2 gap-x-5 gap-y-6 border-t border-forest-deep/10 pt-7">
+                  {project.facts.map((fact) => (
+                    <div key={fact.label}>
+                      <dt className="text-[0.55rem] font-semibold uppercase tracking-[0.15em] text-forest-deep/40">
+                        {fact.label}
+                      </dt>
+
+                      <dd className="mt-2 text-sm leading-6 text-forest-deep">
+                        {fact.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+
+                <div className="mt-8">
+                  <p className="text-[0.55rem] font-semibold uppercase tracking-[0.15em] text-forest-deep/40">
+                    Herramientas y procesos
+                  </p>
+
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {project.tools.map((tool) => (
+                      <li
+                        className="rounded-full border border-forest-deep/10 bg-white/45 px-3 py-1.5 text-[0.65rem] text-forest-deep/65"
+                        key={tool}
+                      >
+                        {tool}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-9 flex flex-wrap gap-3">
+                  {project.bimSlug ? (
+                    <Link
+                      className="group inline-flex min-h-11 items-center gap-3 rounded-full bg-blueprint-deep px-5 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-ivory transition hover:-translate-y-0.5 hover:bg-blueprint-deep/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blueprint-deep focus-visible:ring-offset-4"
+                      href={`/modelos/${project.bimSlug}`}
+                    >
+                      <Boxes
+                        aria-hidden="true"
+                        size={15}
+                        strokeWidth={1.5}
+                      />
+
+                      Ver modelo 3D
+                    </Link>
+                  ) : null}
+
+                  <Link
+                    className="group inline-flex min-h-11 items-center gap-3 rounded-full bg-terracotta px-5 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-ivory transition hover:-translate-y-0.5 hover:bg-terracotta/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-4"
+                    href={project.behanceUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Ver en Behance
+
+                    <ArrowUpRight
+                      aria-hidden="true"
+                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                      size={15}
+                      strokeWidth={1.5}
+                    />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
+  );
+}
