@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Montserrat } from "next/font/google";
 
-import { SiteFooter } from "@/components/layout/site-footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { SiteChrome } from "@/components/layout/site-chrome";
 
 import "./globals.css";
 
@@ -50,18 +49,14 @@ export default function RootLayout({
   children,
 }: RootLayoutProps) {
   return (
-    <html 
+    <html
       data-scroll-behavior="smooth"
       lang="es"
     >
       <body
         className={`${montserrat.variable} ${boska.variable} bg-paper font-sans text-ink antialiased`}
       >
-        <SiteHeader />
-
-        {children}
-
-        <SiteFooter />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

@@ -236,9 +236,13 @@ export function SiteHeader() {
                     {mobileMenuTitle}
                   </p>
 
-                  <p className="shrink-0 text-[0.55rem] uppercase tracking-[0.15em] text-ivory/35">
+                  <Link
+                    className="shrink-0 text-[0.55rem] uppercase tracking-[0.15em] text-ivory/35"
+                    href="/admin/login"
+                    onClick={closeMenu}
+                  >
                     Emiliano Rossotti
-                  </p>
+                  </Link>
                 </div>
 
                 <ul className="flex flex-col">
