@@ -1,8 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
+  ArrowLeft,
+  ArrowRight,
   ArrowUpRight,
   Boxes,
   X,
@@ -14,12 +15,13 @@ import {
 import {
   useEffect,
   useRef,
+  useState,
 } from "react";
 
-import type { ProfessionalProject } from "@/data/professional-projects";
+import type { PortfolioProject } from "@/components/projects/portfolio-project";
 
 type ProjectDetailsModalProps = {
-  project: ProfessionalProject | null;
+  project: PortfolioProject | null;
   onClose: () => void;
 };
 
@@ -32,6 +34,13 @@ export function ProjectDetailsModal({
 
   const closeButtonRef =
     useRef<HTMLButtonElement | null>(null);
+
+  const [activeImageIndex, setActiveImageIndex] =
+    useState(0);
+
+  useEffect(() => {
+    setActiveImageIndex(0);
+  }, [project]);
 
   useEffect(() => {
     if (!project) {
@@ -170,14 +179,20 @@ export function ProjectDetailsModal({
 
             <div className="grid grid-cols-1 lg:grid-cols-12">
               <div className="relative min-h-64 overflow-hidden bg-blueprint-deep lg:col-span-7 lg:min-h-[38rem]">
-                <Image
-                  alt={project.coverAlt}
-                  className="object-cover"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 58vw"
-                  src={project.coverImage}
-                />
+                {project.images[
+                  activeImageIndex
+                ] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt={project.title}
+                    className="absolute inset-0 size-full object-cover"
+                    src={
+                      project.images[
+                        activeImageIndex
+                      ]
+                    }
+                  />
+                ) : null}
 
                 <div
                   aria-hidden="true"
@@ -187,6 +202,53 @@ export function ProjectDetailsModal({
                 <span className="absolute bottom-5 left-5 rounded-full border border-white/20 bg-blueprint-deep/65 px-4 py-2 text-[0.58rem] font-semibold uppercase tracking-[0.16em] text-ivory backdrop-blur-md">
                   Proyecto {project.number}
                 </span>
+
+                {project.images.length > 1 ? (
+                  <div className="absolute bottom-5 right-5 flex gap-2">
+                    <button
+                      aria-label="Imagen anterior"
+                      className="grid size-9 place-items-center rounded-full border border-white/20 bg-blueprint-deep/65 text-ivory backdrop-blur-md hover:bg-blueprint-deep"
+                      onClick={() =>
+                        setActiveImageIndex(
+                          (current) =>
+                            (current -
+                              1 +
+                              project.images
+                                .length) %
+                            project.images
+                              .length,
+                        )
+                      }
+                      type="button"
+                    >
+                      <ArrowLeft
+                        aria-hidden="true"
+                        size={14}
+                        strokeWidth={1.6}
+                      />
+                    </button>
+
+                    <button
+                      aria-label="Imagen siguiente"
+                      className="grid size-9 place-items-center rounded-full border border-white/20 bg-blueprint-deep/65 text-ivory backdrop-blur-md hover:bg-blueprint-deep"
+                      onClick={() =>
+                        setActiveImageIndex(
+                          (current) =>
+                            (current + 1) %
+                            project.images
+                              .length,
+                        )
+                      }
+                      type="button"
+                    >
+                      <ArrowRight
+                        aria-hidden="true"
+                        size={14}
+                        strokeWidth={1.6}
+                      />
+                    </button>
+                  </div>
+                ) : null}
               </div>
 
               <div className="flex flex-col p-6 sm:p-8 lg:col-span-5 lg:p-10">
@@ -201,40 +263,50 @@ export function ProjectDetailsModal({
                   {project.title}
                 </h2>
 
-                <p className="mt-5 text-sm leading-7 text-forest-deep/65">
-                  {project.summary}
-                </p>
-
-                <dl className="mt-8 grid grid-cols-2 gap-x-5 gap-y-6 border-t border-forest-deep/10 pt-7">
-                  {project.facts.map((fact) => (
-                    <div key={fact.label}>
-                      <dt className="text-[0.55rem] font-semibold uppercase tracking-[0.15em] text-forest-deep/40">
-                        {fact.label}
-                      </dt>
-
-                      <dd className="mt-2 text-sm leading-6 text-forest-deep">
-                        {fact.value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-
-                <div className="mt-8">
-                  <p className="text-[0.55rem] font-semibold uppercase tracking-[0.15em] text-forest-deep/40">
-                    Herramientas y procesos
+                {project.summary ? (
+                  <p className="mt-5 text-sm leading-7 text-forest-deep/65">
+                    {project.summary}
                   </p>
+                ) : null}
 
-                  <ul className="mt-3 flex flex-wrap gap-2">
-                    {project.tools.map((tool) => (
-                      <li
-                        className="rounded-full border border-forest-deep/10 bg-white/45 px-3 py-1.5 text-[0.65rem] text-forest-deep/65"
-                        key={tool}
-                      >
-                        {tool}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                {project.facts.length > 0 ? (
+                  <dl className="mt-8 grid grid-cols-2 gap-x-5 gap-y-6 border-t border-forest-deep/10 pt-7">
+                    {project.facts.map(
+                      (fact) => (
+                        <div key={fact.label}>
+                          <dt className="text-[0.55rem] font-semibold uppercase tracking-[0.15em] text-forest-deep/40">
+                            {fact.label}
+                          </dt>
+
+                          <dd className="mt-2 text-sm leading-6 text-forest-deep">
+                            {fact.value}
+                          </dd>
+                        </div>
+                      ),
+                    )}
+                  </dl>
+                ) : null}
+
+                {project.tools.length > 0 ? (
+                  <div className="mt-8">
+                    <p className="text-[0.55rem] font-semibold uppercase tracking-[0.15em] text-forest-deep/40">
+                      Herramientas y procesos
+                    </p>
+
+                    <ul className="mt-3 flex flex-wrap gap-2">
+                      {project.tools.map(
+                        (tool) => (
+                          <li
+                            className="rounded-full border border-forest-deep/10 bg-white/45 px-3 py-1.5 text-[0.65rem] text-forest-deep/65"
+                            key={tool}
+                          >
+                            {tool}
+                          </li>
+                        ),
+                      )}
+                    </ul>
+                  </div>
+                ) : null}
 
                 <div className="mt-9 flex flex-wrap gap-3">
                   {project.bimSlug ? (
@@ -253,21 +325,25 @@ export function ProjectDetailsModal({
                     </Link>
                   ) : null}
 
-                  <Link
-                    className="group inline-flex min-h-11 items-center gap-3 rounded-full bg-terracotta px-5 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-ivory transition hover:-translate-y-0.5 hover:bg-terracotta/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-4"
-                    href={project.behanceUrl}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    Ver en Behance
+                  {project.externalLink ? (
+                    <Link
+                      className="group inline-flex min-h-11 items-center gap-3 rounded-full bg-terracotta px-5 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-ivory transition hover:-translate-y-0.5 hover:bg-terracotta/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-4"
+                      href={
+                        project.externalLink
+                      }
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      Ver más
 
-                    <ArrowUpRight
-                      aria-hidden="true"
-                      className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                      size={15}
-                      strokeWidth={1.5}
-                    />
-                  </Link>
+                      <ArrowUpRight
+                        aria-hidden="true"
+                        className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                        size={15}
+                        strokeWidth={1.5}
+                      />
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             </div>

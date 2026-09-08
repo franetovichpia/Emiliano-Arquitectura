@@ -2,11 +2,23 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
-import { updateProjectStatus } from "@/lib/db/collections";
+import {
+  updateProjectInfo,
+  updateProjectStatus,
+} from "@/lib/db/collections";
 import { projectStatusSchema } from "@/lib/db/schemas";
 
 const patchSchema = z.object({
-  status: projectStatusSchema,
+  status: projectStatusSchema.optional(),
+  summary: z.string().optional(),
+  location: z.string().optional(),
+  client: z.string().optional(),
+  yearCompleted: z.number().optional(),
+  areaM2: z.number().optional(),
+  tools: z.array(z.string()).optional(),
+  externalLink: z
+    .union([z.string().url(), z.literal("")])
+    .optional(),
 });
 
 type RouteContext = {
@@ -39,7 +51,19 @@ export async function PATCH(
     );
   }
 
-  await updateProjectStatus(id, body.data.status);
+  const { status, ...info } = body.data;
+
+  if (status) {
+    await updateProjectStatus(id, status);
+  }
+
+  if (Object.keys(info).length > 0) {
+    await updateProjectInfo(id, {
+      ...info,
+      externalLink:
+        info.externalLink || undefined,
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

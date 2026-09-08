@@ -160,6 +160,7 @@ export async function createProject(
     zodiacSign: input.zodiacSign,
     status: "borrador",
     hasIfc: false,
+    tools: [],
     media: [],
     sortOrder: 0,
     createdAt: now,
@@ -203,6 +204,33 @@ export async function addProjectMedia(
     {
       $push: { media },
       $set: { updatedAt: new Date() },
+    },
+  );
+}
+
+type UpdateProjectInfoInput = {
+  summary?: string;
+  location?: string;
+  client?: string;
+  yearCompleted?: number;
+  areaM2?: number;
+  tools?: string[];
+  externalLink?: string;
+};
+
+export async function updateProjectInfo(
+  id: string,
+  input: UpdateProjectInfoInput,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        ...input,
+        updatedAt: new Date(),
+      },
     },
   );
 }

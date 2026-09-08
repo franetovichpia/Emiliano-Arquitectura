@@ -1,4 +1,5 @@
 import { AboutSection } from "@/components/sections/about-section";
+import { AstrocasasSection } from "@/components/sections/astrocasas-section";
 import { BimViewerSection } from "@/components/sections/bim-viewer-section";
 import { ContactSection } from "@/components/sections/contact-section";
 import { HeroSection } from "@/components/sections/hero-section";
@@ -14,6 +15,7 @@ export default function HomePage() {
       <AboutSection />
       <ServicesSection />
       <ProfessionalProjectsSection />
+      <AstrocasasSection />
       <BimViewerSection />
       <ContactSection />
       <ReflectionsSection />

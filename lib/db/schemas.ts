@@ -72,6 +72,8 @@ export const projectSchema = z.object({
   client: z.string().optional(),
   yearCompleted: z.number().optional(),
   areaM2: z.number().optional(),
+  tools: z.array(z.string()).default([]),
+  externalLink: z.string().url().optional(),
   coverMediaId: z.string().optional(),
   media: z.array(projectMediaSchema).default([]),
   bimModel: bimModelSchema.optional(),

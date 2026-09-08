@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,10 +13,10 @@ import {
 } from "react";
 
 import { ProjectDetailsModal } from "@/components/projects/project-details-modal";
-import type { ProfessionalProject } from "@/data/professional-projects";
+import type { PortfolioProject } from "@/components/projects/portfolio-project";
 
 type ProjectCarouselProps = {
-  projects: readonly ProfessionalProject[];
+  projects: readonly PortfolioProject[];
 };
 
 export function ProjectCarousel({
@@ -27,7 +26,7 @@ export function ProjectCarousel({
     useRef<HTMLDivElement>(null);
 
   const [selectedProject, setSelectedProject] =
-    useState<ProfessionalProject | null>(null);
+    useState<PortfolioProject | null>(null);
 
   const [isPaused, setIsPaused] =
     useState(false);
@@ -177,7 +176,7 @@ export function ProjectCarousel({
         </div>
 
         <div
-          aria-label="Proyectos profesionales"
+          aria-label="Proyectos"
           className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           ref={carouselRef}
           role="region"
@@ -193,23 +192,32 @@ export function ProjectCarousel({
               }
               type="button"
             >
-              <div className="relative aspect-[4/3] overflow-hidden">
-                <Image
-                  alt={project.coverAlt}
-                  className="object-cover transition-transform duration-700 group-hover:scale-[1.035]"
-                  fill
-                  sizes="(max-width: 640px) 82vw, 368px"
-                  src={project.coverImage}
-                />
+              <div className="relative aspect-[4/3] overflow-hidden bg-blueprint-deep">
+                {project.images[0] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt={project.title}
+                    className="absolute inset-0 size-full object-cover transition-transform duration-700 group-hover:scale-[1.035]"
+                    src={project.images[0]}
+                  />
+                ) : null}
 
                 <div
                   aria-hidden="true"
                   className="absolute inset-0 bg-[linear-gradient(180deg,transparent_35%,rgb(11_38_55/0.82)_100%)]"
                 />
 
-                <span className="absolute left-4 top-4 rounded-full border border-white/20 bg-blueprint-deep/55 px-3 py-1.5 text-[0.54rem] font-semibold uppercase tracking-[0.15em] backdrop-blur-md">
-                  {project.category}
-                </span>
+                <div className="absolute left-4 top-4 flex flex-wrap gap-1.5">
+                  <span className="rounded-full border border-white/20 bg-blueprint-deep/55 px-3 py-1.5 text-[0.54rem] font-semibold uppercase tracking-[0.15em] backdrop-blur-md">
+                    {project.category}
+                  </span>
+
+                  {project.zodiacSign ? (
+                    <span className="rounded-full border border-sage/30 bg-sage/20 px-3 py-1.5 text-[0.54rem] font-semibold uppercase tracking-[0.15em] text-sage backdrop-blur-md">
+                      {project.zodiacSign}
+                    </span>
+                  ) : null}
+                </div>
 
                 <span className="absolute right-4 top-4 grid size-9 place-items-center rounded-full border border-white/20 bg-blueprint-deep/55 backdrop-blur-md">
                   <Maximize2
@@ -221,16 +229,13 @@ export function ProjectCarousel({
 
                 <div className="absolute bottom-0 left-0 right-0 p-5">
                   <span className="text-[0.56rem] font-semibold uppercase tracking-[0.16em] text-sage">
-                    {project.number} · {project.year}
+                    {project.number} ·{" "}
+                    {project.year}
                   </span>
 
                   <h3 className="mt-2 font-sans text-xl font-medium leading-tight tracking-[-0.025em] sm:text-2xl">
                     {project.title}
                   </h3>
-
-                  <p className="mt-2 text-xs text-ivory/60">
-                    {project.location}
-                  </p>
                 </div>
               </div>
             </button>

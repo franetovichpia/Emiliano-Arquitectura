@@ -6,6 +6,7 @@ import {
 } from "next/navigation";
 import { ArrowLeft, FileText } from "lucide-react";
 
+import { AdminProjectInfoForm } from "@/components/forms/admin-project-info-form";
 import { ProjectMediaUploader } from "@/components/admin/project-media-uploader";
 import { ProjectStatusForm } from "@/components/admin/project-status-form";
 import { requireAdminSession } from "@/lib/auth/session";
@@ -70,6 +71,21 @@ export default async function AdminProjectPage({
         <div className="mt-10 space-y-6">
           <ProjectStatusForm
             currentStatus={project.status}
+            projectId={project._id.toString()}
+          />
+
+          <AdminProjectInfoForm
+            initialValues={{
+              summary: project.summary,
+              location: project.location,
+              client: project.client,
+              yearCompleted:
+                project.yearCompleted,
+              areaM2: project.areaM2,
+              tools: project.tools,
+              externalLink:
+                project.externalLink,
+            }}
             projectId={project._id.toString()}
           />
 

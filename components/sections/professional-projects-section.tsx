@@ -4,9 +4,23 @@ import { ArrowUpRight } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 import { ProjectCarousel } from "@/components/projects/project-carousel";
 import { Container } from "@/app/container";
-import { professionalProjects } from "@/data/professional-projects";
+import { listPublicProjects } from "@/lib/db/collections";
+import { toPortfolioProject } from "@/lib/portfolio-project-adapter";
 
-export function ProfessionalProjectsSection() {
+export async function ProfessionalProjectsSection() {
+  const [portfolioProjects, newProjects] =
+    await Promise.all([
+      listPublicProjects("portfolio-general"),
+      listPublicProjects("nuevos-proyectos"),
+    ]);
+
+  const projects = [
+    ...portfolioProjects,
+    ...newProjects,
+  ].map((project, index) =>
+    toPortfolioProject(project, index),
+  );
+
   return (
     <section
       aria-labelledby="professional-projects-heading"
@@ -51,22 +65,6 @@ export function ProfessionalProjectsSection() {
                 Selección de trabajos de arquitectura,
                 representación y procesos BIM.
               </p>
-
-              <Link
-                className="group mt-6 inline-flex items-center gap-2 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-blueprint-line transition-colors hover:text-ivory"
-                href="https://www.behance.net/emilianobim"
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                Ver portfolio completo
-
-                <ArrowUpRight
-                  aria-hidden="true"
-                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                  size={15}
-                  strokeWidth={1.5}
-                />
-              </Link>
             </div>
           </Reveal>
         </div>
@@ -75,9 +73,14 @@ export function ProfessionalProjectsSection() {
           className="mt-12"
           delay={0.14}
         >
-          <ProjectCarousel
-            projects={professionalProjects}
-          />
+          {projects.length === 0 ? (
+            <p className="rounded-2xl border border-white/10 bg-white/[0.04] p-8 text-sm text-ivory/50">
+              Todavía no hay proyectos publicados
+              en esta categoría.
+            </p>
+          ) : (
+            <ProjectCarousel projects={projects} />
+          )}
         </Reveal>
       </Container>
     </section>
