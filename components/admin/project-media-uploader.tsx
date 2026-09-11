@@ -38,8 +38,13 @@ export function ProjectMediaUploader({
   const inputRef =
     useRef<HTMLInputElement | null>(null);
 
-  const [isUploading, setIsUploading] =
-    useState(false);
+  const [uploadProgress, setUploadProgress] =
+    useState<{
+      current: number;
+      total: number;
+    } | null>(null);
+
+  const isUploading = uploadProgress !== null;
 
   const [imageUrl, setImageUrl] = useState("");
 
@@ -51,102 +56,124 @@ export function ProjectMediaUploader({
   const [error, setError] =
     useState<string | null>(null);
 
+  const uploadSingleFile = async (file: File) => {
+    const presignResponse = await fetch(
+      "/api/admin/uploads/presign",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bucket: "media",
+          fileName: file.name,
+          contentType:
+            file.type ||
+            "application/octet-stream",
+          projectSlug,
+        }),
+      },
+    );
+
+    if (!presignResponse.ok) {
+      throw new Error(
+        "No fue posible preparar la subida.",
+      );
+    }
+
+    const { uploadUrl, key } =
+      (await presignResponse.json()) as {
+        uploadUrl: string;
+        key: string;
+      };
+
+    const uploadResponse = await fetch(
+      uploadUrl,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type":
+            file.type ||
+            "application/octet-stream",
+        },
+        body: file,
+      },
+    );
+
+    if (!uploadResponse.ok) {
+      throw new Error(
+        "No fue posible subir el archivo.",
+      );
+    }
+
+    const saveResponse = await fetch(
+      `/api/admin/projects/${projectId}/media`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          mediaType: detectMediaType(file),
+          storageKey: key,
+          title: file.name,
+          fileSizeBytes: file.size,
+          mimeType: file.type,
+        }),
+      },
+    );
+
+    if (!saveResponse.ok) {
+      throw new Error(
+        "El archivo se subió pero no se pudo guardar en el proyecto.",
+      );
+    }
+  };
+
   const handleFileChange = async (
     event: ChangeEvent<HTMLInputElement>,
   ) => {
-    const file = event.target.files?.[0];
+    const files = Array.from(
+      event.target.files ?? [],
+    );
     event.target.value = "";
 
-    if (!file) {
+    if (files.length === 0) {
       return;
     }
 
-    setIsUploading(true);
     setError(null);
 
-    try {
-      const presignResponse = await fetch(
-        "/api/admin/uploads/presign",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            bucket: "media",
-            fileName: file.name,
-            contentType:
-              file.type ||
-              "application/octet-stream",
-            projectSlug,
-          }),
-        },
-      );
+    const failedFileNames: string[] = [];
 
-      if (!presignResponse.ok) {
-        throw new Error(
-          "No fue posible preparar la subida.",
-        );
+    for (
+      let index = 0;
+      index < files.length;
+      index += 1
+    ) {
+      const file = files[index];
+
+      setUploadProgress({
+        current: index + 1,
+        total: files.length,
+      });
+
+      try {
+        await uploadSingleFile(file);
+      } catch {
+        failedFileNames.push(file.name);
       }
-
-      const { uploadUrl, key } =
-        (await presignResponse.json()) as {
-          uploadUrl: string;
-          key: string;
-        };
-
-      const uploadResponse = await fetch(
-        uploadUrl,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type":
-              file.type ||
-              "application/octet-stream",
-          },
-          body: file,
-        },
-      );
-
-      if (!uploadResponse.ok) {
-        throw new Error(
-          "No fue posible subir el archivo.",
-        );
-      }
-
-      const saveResponse = await fetch(
-        `/api/admin/projects/${projectId}/media`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            mediaType: detectMediaType(file),
-            storageKey: key,
-            title: file.name,
-            fileSizeBytes: file.size,
-            mimeType: file.type,
-          }),
-        },
-      );
-
-      if (!saveResponse.ok) {
-        throw new Error(
-          "El archivo se subió pero no se pudo guardar en el proyecto.",
-        );
-      }
-
-      router.refresh();
-    } catch (err: unknown) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "No fue posible subir el archivo.",
-      );
-    } finally {
-      setIsUploading(false);
     }
+
+    setUploadProgress(null);
+
+    if (failedFileNames.length > 0) {
+      setError(
+        `No se pudieron subir: ${failedFileNames.join(", ")}`,
+      );
+    }
+
+    router.refresh();
   };
 
   const handleUrlSubmit = async (
@@ -214,6 +241,7 @@ export function ProjectMediaUploader({
         <input
           accept="image/*,application/pdf"
           className="hidden"
+          multiple
           onChange={handleFileChange}
           ref={inputRef}
           type="file"
@@ -240,9 +268,9 @@ export function ProjectMediaUploader({
               strokeWidth={1.8}
             />
           )}
-          {isUploading
-            ? "Subiendo..."
-            : "Subir imagen o PDF"}
+          {uploadProgress
+            ? `Subiendo ${uploadProgress.current} de ${uploadProgress.total}...`
+            : "Subir imágenes o PDF"}
         </button>
       </div>
 
