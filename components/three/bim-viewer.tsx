@@ -23,6 +23,7 @@ import {
   ArrowUp,
   Boxes,
   Footprints,
+  Layers,
   Loader2,
   Maximize2,
   Minimize2,
@@ -34,12 +35,15 @@ import {
   createBimVisualEnvironment,
 } from "@/components/three/bim-visual-style";
 import type { BimModelFormat } from "@/data/bim-projects";
+import type { BimMaterialInfo, MaterialFinish } from "@/lib/db/schemas";
 import { cn } from "@/utils/cn";
 
 type BimViewerProps = {
   modelFormat: BimModelFormat;
   modelName: string;
   modelUrl: string;
+  materials?: readonly BimMaterialInfo[];
+  materialOverrides?: Record<string, MaterialFinish>;
 };
 
 type ViewerStatus =
@@ -70,6 +74,10 @@ type StartWalkFunction = (
   clientX: number,
   clientY: number,
 ) => Promise<boolean>;
+
+type IsolateMaterialFunction = (
+  colorHex: string | null,
+) => Promise<void>;
 
 type MovementButtonProps = {
   action: NavigationAction;
@@ -146,6 +154,8 @@ export function BimViewer({
   modelFormat,
   modelName,
   modelUrl,
+  materials,
+  materialOverrides,
 }: BimViewerProps) {
   const viewerContainerRef =
     useRef<HTMLDivElement | null>(null);
@@ -162,8 +172,23 @@ export function BimViewer({
   const startWalkRef =
     useRef<StartWalkFunction | null>(null);
 
+  const isolateMaterialRef =
+    useRef<IsolateMaterialFunction | null>(
+      null,
+    );
+
   const activeViewerSessionRef =
     useRef<symbol | null>(null);
+
+  const [
+    selectedMaterialKey,
+    setSelectedMaterialKey,
+  ] = useState<string | null>(null);
+
+  const [
+    isMaterialMenuOpen,
+    setIsMaterialMenuOpen,
+  ] = useState(false);
 
   const [status, setStatus] =
     useState<ViewerStatus>("initializing");
@@ -238,6 +263,7 @@ export function BimViewer({
         resetViewRef.current = null;
         navigateRef.current = null;
         startWalkRef.current = null;
+        isolateMaterialRef.current = null;
 
         activeViewerSessionRef.current = null;
       }
@@ -266,6 +292,8 @@ export function BimViewer({
       setStage("Inicializando entorno OpenBIM");
       setProgress(0);
       setErrorMessage(null);
+      setSelectedMaterialKey(null);
+      setIsMaterialMenuOpen(false);
 
       const [THREE, OBC] =
         await Promise.all([
@@ -454,6 +482,7 @@ export function BimViewer({
         ({ value: material }) => {
           applyBimMaterialFinish(
             material,
+            materialOverrides,
           );
         },
       );
@@ -645,6 +674,62 @@ export function BimViewer({
       if (disposed) {
         return;
       }
+
+      const materialGroups =
+        modelItemIds.length > 0
+          ? await loadedModel.getItemsMaterialDefinition(
+              modelItemIds,
+            )
+          : [];
+
+      if (disposed) {
+        return;
+      }
+
+      isolateMaterialRef.current = async (
+        colorHex,
+      ) => {
+        if (!colorHex) {
+          await loadedModel.resetVisible();
+          await fragments.core.update(true);
+          return;
+        }
+
+        const target = colorHex
+          .replace("#", "")
+          .toLowerCase();
+
+        const matchIds: number[] = [];
+        const restIds: number[] = [];
+
+        for (const group of materialGroups) {
+          const hex = group.definition.color
+            .getHexString()
+            .toLowerCase();
+
+          if (hex === target) {
+            matchIds.push(...group.localIds);
+          } else {
+            restIds.push(...group.localIds);
+          }
+        }
+
+        if (matchIds.length === 0) {
+          return;
+        }
+
+        await loadedModel.setVisible(
+          restIds,
+          false,
+        );
+
+        await loadedModel.setVisible(
+          matchIds,
+          true,
+        );
+
+        await fragments.core.update(true);
+      };
 
       if (modelItemIds.length > 0) {
         latestModelBox =
@@ -936,6 +1021,12 @@ export function BimViewer({
         disposeResources();
       }
     };
+    /*
+     * materialOverrides se lee al vuelo dentro del
+     * listener de materiales; no dispara una
+     * reinicialización completa del visor por sí solo.
+     */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     modelFormat,
     modelName,
@@ -974,6 +1065,20 @@ export function BimViewer({
     action: NavigationAction,
   ) => {
     void navigateRef.current?.(action);
+  };
+
+  const handleSelectMaterial = (
+    material: BimMaterialInfo | null,
+  ) => {
+    setSelectedMaterialKey(
+      material?.key ?? null,
+    );
+
+    setIsMaterialMenuOpen(false);
+
+    void isolateMaterialRef.current?.(
+      material?.colorHex ?? null,
+    );
   };
 
   const handleViewerKeyDown = (
@@ -1151,6 +1256,101 @@ export function BimViewer({
           </div>
 
           <div className="pointer-events-auto flex items-center gap-2">
+            {materials && materials.length > 0 ? (
+              <div className="relative">
+                <button
+                  aria-expanded={
+                    isMaterialMenuOpen
+                  }
+                  aria-pressed={
+                    selectedMaterialKey !==
+                    null
+                  }
+                  className={cn(
+                    "glass-interactive inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.57rem] font-semibold uppercase tracking-[0.13em] shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40",
+                    selectedMaterialKey !==
+                      null
+                      ? "border-[#d17c5b]/60 bg-[#d17c5b] text-white"
+                      : "border-white/15 bg-[#071d31]/80 text-white",
+                  )}
+                  disabled={
+                    navigationDisabled
+                  }
+                  onClick={() =>
+                    setIsMaterialMenuOpen(
+                      (value) => !value,
+                    )
+                  }
+                  type="button"
+                >
+                  <Layers
+                    aria-hidden="true"
+                    size={16}
+                    strokeWidth={1.6}
+                  />
+
+                  <span className="hidden sm:inline">
+                    Materiales
+                  </span>
+                </button>
+
+                {isMaterialMenuOpen ? (
+                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 max-h-72 w-56 overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-1.5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl">
+                    <button
+                      className={cn(
+                        "flex w-full items-center rounded-xl px-3 py-2 text-left text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-white/70 hover:bg-white/[0.08]",
+                        selectedMaterialKey ===
+                          null &&
+                          "bg-white/[0.08] text-white",
+                      )}
+                      onClick={() =>
+                        handleSelectMaterial(
+                          null,
+                        )
+                      }
+                      type="button"
+                    >
+                      Ver todo el modelo
+                    </button>
+
+                    {materials.map(
+                      (material) => (
+                        <button
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs text-white/80 hover:bg-white/[0.08]",
+                            selectedMaterialKey ===
+                              material.key &&
+                              "bg-white/[0.08] text-white",
+                          )}
+                          key={material.key}
+                          onClick={() =>
+                            handleSelectMaterial(
+                              material,
+                            )
+                          }
+                          type="button"
+                        >
+                          <span
+                            aria-hidden="true"
+                            className="size-3 shrink-0 rounded-full border border-white/25"
+                            style={{
+                              backgroundColor:
+                                material.colorHex ??
+                                "#5f91ad",
+                            }}
+                          />
+
+                          <span className="truncate">
+                            {material.name}
+                          </span>
+                        </button>
+                      ),
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             <button
               aria-pressed={
                 isSelectingWalkStart ||

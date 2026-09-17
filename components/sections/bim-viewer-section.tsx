@@ -11,6 +11,38 @@ import { Reveal } from "@/components/motion/reveal";
 import { Container } from "@/app/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { bimProjects } from "@/data/bim-projects";
+import { listPublicBimProjects } from "@/lib/db/collections";
+import { formatFileSize } from "@/utils/format";
+
+type BimShowcaseItem = {
+  slug: string;
+  number: string;
+  title: string;
+  label: string;
+  schema: string;
+  modelSize: string;
+};
+
+async function getShowcaseItems(): Promise<
+  readonly BimShowcaseItem[]
+> {
+  const projects = await listPublicBimProjects();
+
+  if (projects.length === 0) {
+    return bimProjects;
+  }
+
+  return projects.map((project, index) => ({
+    slug: project.slug,
+    number: String(index + 1).padStart(2, "0"),
+    title: project.title,
+    label: project.subtitle ?? "Proyecto autogestionado",
+    schema: project.bimModel?.ifcSchema ?? "IFC",
+    modelSize:
+      formatFileSize(project.bimModel?.fileSizeBytes) ??
+      "—",
+  }));
+}
 
 const viewerCapabilities = [
   {
@@ -31,7 +63,9 @@ const viewerCapabilities = [
   },
 ] as const;
 
-export function BimViewerSection() {
+export async function BimViewerSection() {
+  const showcaseItems = await getShowcaseItems();
+
   return (
     <section
       aria-labelledby="bim-viewer-heading"
@@ -106,7 +140,7 @@ export function BimViewerSection() {
         </Reveal>
 
         <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {bimProjects.map((project, index) => (
+          {showcaseItems.map((project, index) => (
             <Reveal
               delay={0.14 + index * 0.08}
               key={project.slug}

@@ -7,11 +7,15 @@ import {
 } from "lucide-react";
 
 import { BimViewerLoader } from "@/components/three/bim-viewer-loader";
+import { ConstructionProgressChart } from "@/components/projects/construction-progress-chart";
 import { Container } from "@/app/container";
 import {
-  bimProjects,
-  getBimProject,
-} from "@/data/bim-projects";
+  getPublicProjectBySlug,
+  listConstructionProgress,
+  listPublicBimProjects,
+} from "@/lib/db/collections";
+import { getPublicUrl } from "@/lib/storage/r2-client";
+import { formatFileSize } from "@/utils/format";
 
 type ModelViewerPageProps = {
   params: Promise<{
@@ -19,8 +23,10 @@ type ModelViewerPageProps = {
   }>;
 };
 
-export function generateStaticParams() {
-  return bimProjects.map((project) => ({
+export async function generateStaticParams() {
+  const projects = await listPublicBimProjects();
+
+  return projects.map((project) => ({
     slug: project.slug,
   }));
 }
@@ -29,9 +35,9 @@ export async function generateMetadata({
   params,
 }: ModelViewerPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const project = getBimProject(slug);
+  const project = await getPublicProjectBySlug(slug);
 
-  if (!project) {
+  if (!project || !project.hasIfc || !project.bimModel) {
     return {
       title: "Modelo no disponible",
     };
@@ -47,11 +53,27 @@ export default async function ModelViewerPage({
   params,
 }: ModelViewerPageProps) {
   const { slug } = await params;
-  const project = getBimProject(slug);
+  const project = await getPublicProjectBySlug(slug);
 
-  if (!project) {
+  if (!project || !project.hasIfc || !project.bimModel) {
     notFound();
   }
+
+  const { bimModel } = project;
+
+  const storageKey =
+    bimModel.ifcStorageKey ?? bimModel.fragStorageKey;
+
+  if (!storageKey) {
+    notFound();
+  }
+
+  const modelUrl = getPublicUrl("bim", storageKey);
+  const modelSize = formatFileSize(bimModel.fileSizeBytes);
+
+  const progressEntries = await listConstructionProgress(
+    project._id.toString(),
+  );
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#071d31] text-[#f7f2e8]">
@@ -100,7 +122,7 @@ export default async function ModelViewerPage({
             </Link>
 
             <p className="mt-7 text-[0.63rem] font-semibold uppercase tracking-[0.19em] text-[#d17c5b]">
-              {project.label}
+              {project.subtitle ?? "Modelo BIM autogestionado"}
             </p>
 
             <h1 className="mt-3 max-w-4xl font-serif text-[clamp(2.8rem,5vw,5.5rem)] leading-[0.95] tracking-[-0.04em] text-[#f7f2e8]">
@@ -124,7 +146,8 @@ export default async function ModelViewerPage({
 
             <div className="inline-flex min-h-11 items-center rounded-full border border-white/15 bg-white/[0.07] px-4 backdrop-blur-xl">
               <span className="text-[0.59rem] font-semibold uppercase tracking-[0.14em] text-white/65">
-                {project.schema} · {project.modelSize}
+                {bimModel.ifcSchema ?? "IFC"}
+                {modelSize ? ` · ${modelSize}` : ""}
               </span>
             </div>
           </div>
@@ -132,11 +155,29 @@ export default async function ModelViewerPage({
 
         <div className="overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#071d31] shadow-[0_2.5rem_8rem_rgb(0_0_0/0.35)]">
           <BimViewerLoader
-            modelFormat={project.modelFormat}
+            materialOverrides={bimModel.materialOverrides}
+            materials={bimModel.materials}
+            modelFormat={bimModel.format}
             modelName={project.title}
-            modelUrl={project.modelUrl}
+            modelUrl={modelUrl}
           />
         </div>
+
+        {progressEntries.length > 0 ? (
+          <div className="mt-8">
+            <ConstructionProgressChart
+              entries={progressEntries.map((entry) => ({
+                id: entry._id.toString(),
+                stageName: entry.stageName,
+                plannedPercentage:
+                  entry.plannedPercentage,
+                actualPercentage:
+                  entry.actualPercentage,
+                notes: entry.notes,
+              }))}
+            />
+          </div>
+        ) : null}
       </Container>
     </main>
   );

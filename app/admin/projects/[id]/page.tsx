@@ -7,10 +7,16 @@ import {
 import { ArrowLeft, FileText } from "lucide-react";
 
 import { AdminProjectInfoForm } from "@/components/forms/admin-project-info-form";
+import { ProjectBimMaterialsEditor } from "@/components/admin/project-bim-materials-editor";
+import { ProjectBimUploader } from "@/components/admin/project-bim-uploader";
 import { ProjectMediaUploader } from "@/components/admin/project-media-uploader";
+import { ProjectProgressEditor } from "@/components/admin/project-progress-editor";
 import { ProjectStatusForm } from "@/components/admin/project-status-form";
 import { requireAdminSession } from "@/lib/auth/session";
-import { getAdminProjectById } from "@/lib/db/collections";
+import {
+  getAdminProjectById,
+  listConstructionProgress,
+} from "@/lib/db/collections";
 import { getPublicUrl } from "@/lib/storage/r2-client";
 
 export const metadata: Metadata = {
@@ -40,6 +46,9 @@ export default async function AdminProjectPage({
   if (!project) {
     notFound();
   }
+
+  const progressEntries =
+    await listConstructionProgress(id);
 
   return (
     <main className="min-h-screen bg-[#071d31] px-4 py-16 text-white">
@@ -157,15 +166,65 @@ export default async function AdminProjectPage({
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-sage">
+                  Contenido BIM (3D)
+                </p>
+
+                <p className="mt-3 text-sm text-white/55">
+                  {project.hasIfc
+                    ? "Este proyecto tiene un modelo BIM cargado. Subir un nuevo archivo lo reemplaza."
+                    : "Subí el archivo IFC de siempre: los materiales se detectan automáticamente."}
+                </p>
+              </div>
+
+              <ProjectBimUploader
+                projectId={project._id.toString()}
+                projectSlug={project.slug}
+              />
+            </div>
+
+            {project.bimModel &&
+            project.bimModel.materials.length > 0 ? (
+              <ProjectBimMaterialsEditor
+                materials={
+                  project.bimModel.materials
+                }
+                overrides={
+                  project.bimModel
+                    .materialOverrides
+                }
+                projectId={project._id.toString()}
+              />
+            ) : null}
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
             <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-sage">
-              Contenido BIM
+              Avance de obra (5D)
             </p>
 
             <p className="mt-3 text-sm text-white/55">
-              {project.hasIfc
-                ? "Este proyecto tiene un modelo BIM cargado."
-                : "Todavía no se cargó ningún archivo IFC. La subida de IFC se agrega en el próximo paso."}
+              Cargá el porcentaje de avance por
+              etapa. Esto se muestra públicamente
+              en la página del modelo.
             </p>
+
+            <ProjectProgressEditor
+              entries={progressEntries.map(
+                (entry) => ({
+                  id: entry._id.toString(),
+                  stageName: entry.stageName,
+                  plannedPercentage:
+                    entry.plannedPercentage,
+                  actualPercentage:
+                    entry.actualPercentage,
+                  notes: entry.notes,
+                }),
+              )}
+              projectId={project._id.toString()}
+            />
           </div>
         </div>
       </div>

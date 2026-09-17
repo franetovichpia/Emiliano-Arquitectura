@@ -7,6 +7,9 @@ import type {
   AdminUser,
   BimAnalysisData,
   BimConstructionProgress,
+  BimMaterialInfo,
+  BimModelFormatValue,
+  MaterialFinish,
   Project,
   ProjectCategory,
   ProjectMedia,
@@ -70,6 +73,17 @@ export async function getPublicProjectBySlug(
 ): Promise<WithId<Project> | null> {
   const projects = await getProjectsCollection();
   return projects.findOne({ slug, status: "publicado" });
+}
+
+export async function listPublicBimProjects(): Promise<
+  WithId<Project>[]
+> {
+  const projects = await getProjectsCollection();
+
+  return projects
+    .find({ status: "publicado", hasIfc: true })
+    .sort({ sortOrder: 1, publishedAt: -1 })
+    .toArray();
 }
 
 export async function getAdminProjectBySlug(
@@ -233,4 +247,111 @@ export async function updateProjectInfo(
       },
     },
   );
+}
+
+type SetProjectBimModelInput = {
+  format: BimModelFormatValue;
+  ifcSchema?: string;
+  ifcStorageKey: string;
+  fileSizeBytes?: number;
+  materials: BimMaterialInfo[];
+};
+
+export async function setProjectBimModel(
+  id: string,
+  input: SetProjectBimModelInput,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+  const now = new Date();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        hasIfc: true,
+        updatedAt: now,
+        bimModel: {
+          format: input.format,
+          ifcSchema: input.ifcSchema,
+          status: "listo",
+          ifcStorageKey: input.ifcStorageKey,
+          fileSizeBytes: input.fileSizeBytes,
+          materials: input.materials,
+          materialOverrides: {},
+          processedAt: now,
+          updatedAt: now,
+        },
+      },
+    },
+  );
+}
+
+export async function updateProjectMaterialOverrides(
+  id: string,
+  overrides: Record<string, MaterialFinish>,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        "bimModel.materialOverrides": overrides,
+        "bimModel.updatedAt": new Date(),
+        updatedAt: new Date(),
+      },
+    },
+  );
+}
+
+type AddConstructionProgressInput = {
+  projectId: string;
+  stageName: string;
+  plannedPercentage: number;
+  actualPercentage: number;
+  recordDate: Date;
+  notes?: string;
+  sortOrder?: number;
+};
+
+export async function addConstructionProgressEntry(
+  input: AddConstructionProgressInput,
+): Promise<WithId<BimConstructionProgress>> {
+  const progress = await getBimConstructionProgressCollection();
+
+  const doc: BimConstructionProgress = {
+    projectId: input.projectId,
+    stageName: input.stageName,
+    plannedPercentage: input.plannedPercentage,
+    actualPercentage: input.actualPercentage,
+    recordDate: input.recordDate,
+    notes: input.notes,
+    sortOrder: input.sortOrder ?? 0,
+    createdAt: new Date(),
+  };
+
+  const result = await progress.insertOne(doc);
+
+  return { _id: result.insertedId, ...doc };
+}
+
+export async function listConstructionProgress(
+  projectId: string,
+): Promise<WithId<BimConstructionProgress>[]> {
+  const progress = await getBimConstructionProgressCollection();
+
+  return progress
+    .find({ projectId })
+    .sort({ sortOrder: 1, recordDate: 1 })
+    .toArray();
+}
+
+export async function deleteConstructionProgressEntry(
+  entryId: string,
+): Promise<void> {
+  const progress = await getBimConstructionProgressCollection();
+
+  await progress.deleteOne({
+    _id: new ObjectId(entryId),
+  });
 }

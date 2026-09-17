@@ -25,6 +25,30 @@ export const bimModelStatusSchema = z.enum([
 ]);
 export type BimModelStatusValue = z.infer<typeof bimModelStatusSchema>;
 
+export const materialFinishSchema = z.enum([
+  "auto",
+  "vidrio",
+  "espejo",
+  "metal",
+  "metal-cepillado",
+  "madera",
+  "hormigon",
+  "piedra",
+  "ceramica",
+  "vegetacion",
+  "default",
+]);
+export type MaterialFinish = z.infer<typeof materialFinishSchema>;
+
+export const bimMaterialInfoSchema = z.object({
+  key: z.string(),
+  name: z.string(),
+  colorHex: z.string().optional(),
+  opacity: z.number().optional(),
+  suggestedFinish: materialFinishSchema.default("auto"),
+});
+export type BimMaterialInfo = z.infer<typeof bimMaterialInfoSchema>;
+
 export const zodiacSignSchema = z.enum([
   "aries", "tauro", "geminis", "cancer", "leo", "virgo",
   "libra", "escorpio", "sagitario", "capricornio", "acuario", "piscis",
@@ -52,6 +76,10 @@ export const bimModelSchema = z.object({
   ifcStorageKey: z.string().optional(),
   fragStorageKey: z.string().optional(),
   fileSizeBytes: z.number().optional(),
+  materials: z.array(bimMaterialInfoSchema).default([]),
+  materialOverrides: z
+    .record(z.string(), materialFinishSchema)
+    .default({}),
   processedAt: z.date().optional(),
   errorMessage: z.string().optional(),
   updatedAt: z.date(),

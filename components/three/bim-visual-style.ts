@@ -13,7 +13,9 @@ import {
 } from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 
-type FinishableMaterial = Material & {
+import type { MaterialFinish } from "@/lib/db/schemas";
+
+export type FinishableMaterial = Material & {
   color?: Color;
   roughness?: MeshStandardMaterial["roughness"];
   metalness?: MeshStandardMaterial["metalness"];
@@ -175,7 +177,7 @@ const vegetationProfile: MaterialProfile = {
   envMapIntensity: 0.24,
 };
 
-function normalizeMaterialName(
+export function normalizeMaterialName(
   value: string,
 ) {
   return value
@@ -184,9 +186,36 @@ function normalizeMaterialName(
     .toLowerCase();
 }
 
-function getMaterialProfile(
+export const finishProfiles: Record<
+  Exclude<MaterialFinish, "auto">,
+  MaterialProfile
+> = {
+  vidrio: {
+    roughness: 0.1,
+    metalness: 0,
+    envMapIntensity: 1.25,
+    opacity: 0.4,
+    doubleSided: true,
+  },
+  espejo: mirrorProfile,
+  metal: metalProfile,
+  "metal-cepillado": brushedMetalProfile,
+  madera: woodProfile,
+  hormigon: concreteProfile,
+  piedra: stoneProfile,
+  ceramica: ceramicProfile,
+  vegetacion: vegetationProfile,
+  default: defaultProfile,
+};
+
+type MaterialClassification = {
+  finish: Exclude<MaterialFinish, "auto">;
+  profile: MaterialProfile;
+};
+
+function classifyMaterial(
   material: FinishableMaterial,
-): MaterialProfile {
+): MaterialClassification {
   const colorHex =
     material.color
       ?.getHexString()
@@ -201,14 +230,20 @@ function getMaterialProfile(
     glassProfiles.get(colorHex);
 
   if (glassProfile) {
-    return glassProfile;
+    return {
+      finish: "vidrio",
+      profile: glassProfile,
+    };
   }
 
   if (
     /espejo|mirror/.test(materialName) ||
     colorHex === "adc9d6"
   ) {
-    return mirrorProfile;
+    return {
+      finish: "espejo",
+      profile: mirrorProfile,
+    };
   }
 
   if (
@@ -219,15 +254,18 @@ function getMaterialProfile(
       material.opacity < 0.85)
   ) {
     return {
-      roughness: 0.1,
-      metalness: 0,
-      envMapIntensity: 1.25,
-      opacity:
-        material.opacity > 0 &&
-        material.opacity < 1
-          ? material.opacity
-          : 0.4,
-      doubleSided: true,
+      finish: "vidrio",
+      profile: {
+        roughness: 0.1,
+        metalness: 0,
+        envMapIntensity: 1.25,
+        opacity:
+          material.opacity > 0 &&
+          material.opacity < 1
+            ? material.opacity
+            : 0.4,
+        doubleSided: true,
+      },
     };
   }
 
@@ -242,10 +280,16 @@ function getMaterialProfile(
         materialName,
       )
     ) {
-      return metalProfile;
+      return {
+        finish: "metal",
+        profile: metalProfile,
+      };
     }
 
-    return brushedMetalProfile;
+    return {
+      finish: "metal-cepillado",
+      profile: brushedMetalProfile,
+    };
   }
 
   if (
@@ -254,7 +298,10 @@ function getMaterialProfile(
       materialName,
     )
   ) {
-    return woodProfile;
+    return {
+      finish: "madera",
+      profile: woodProfile,
+    };
   }
 
   if (
@@ -263,7 +310,10 @@ function getMaterialProfile(
       materialName,
     )
   ) {
-    return concreteProfile;
+    return {
+      finish: "hormigon",
+      profile: concreteProfile,
+    };
   }
 
   if (
@@ -271,7 +321,10 @@ function getMaterialProfile(
       materialName,
     )
   ) {
-    return stoneProfile;
+    return {
+      finish: "piedra",
+      profile: stoneProfile,
+    };
   }
 
   if (
@@ -280,7 +333,10 @@ function getMaterialProfile(
       materialName,
     )
   ) {
-    return ceramicProfile;
+    return {
+      finish: "ceramica",
+      profile: ceramicProfile,
+    };
   }
 
   if (
@@ -289,10 +345,22 @@ function getMaterialProfile(
       materialName,
     )
   ) {
-    return vegetationProfile;
+    return {
+      finish: "vegetacion",
+      profile: vegetationProfile,
+    };
   }
 
-  return defaultProfile;
+  return {
+    finish: "default",
+    profile: defaultProfile,
+  };
+}
+
+export function guessMaterialFinish(
+  material: FinishableMaterial,
+): Exclude<MaterialFinish, "auto"> {
+  return classifyMaterial(material).finish;
 }
 
 function hasPbrProperties(
@@ -306,6 +374,10 @@ function hasPbrProperties(
 
 export function applyBimMaterialFinish(
   material: Material,
+  materialOverrides?: Record<
+    string,
+    MaterialFinish
+  >,
 ) {
   if (
     "isLodMaterial" in material &&
@@ -317,9 +389,26 @@ export function applyBimMaterialFinish(
   const finishableMaterial =
     material as FinishableMaterial;
 
-  const profile = getMaterialProfile(
-    finishableMaterial,
-  );
+  /*
+   * El color es el único identificador de material
+   * estable en tiempo de ejecución (ver
+   * bim-material-extraction.ts), así que las
+   * anulaciones se guardan y se buscan por color.
+   */
+  const colorKey = finishableMaterial.color
+    ?.getHexString()
+    .toLowerCase();
+
+  const overrideFinish = colorKey
+    ? materialOverrides?.[colorKey]
+    : undefined;
+
+  const profile =
+    overrideFinish &&
+    overrideFinish !== "auto"
+      ? finishProfiles[overrideFinish]
+      : classifyMaterial(finishableMaterial)
+          .profile;
 
   if (
     hasPbrProperties(finishableMaterial)

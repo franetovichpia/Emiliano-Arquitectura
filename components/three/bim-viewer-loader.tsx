@@ -3,11 +3,14 @@
 import dynamic from "next/dynamic";
 
 import type { BimModelFormat } from "@/data/bim-projects";
+import type { BimMaterialInfo, MaterialFinish } from "@/lib/db/schemas";
 
 type BimViewerLoaderProps = {
   modelFormat: BimModelFormat;
   modelName: string;
   modelUrl: string;
+  materials?: readonly BimMaterialInfo[];
+  materialOverrides?: Record<string, MaterialFinish>;
 };
 
 const BimViewer = dynamic(
@@ -35,9 +38,13 @@ export function BimViewerLoader({
   modelFormat,
   modelName,
   modelUrl,
+  materials,
+  materialOverrides,
 }: BimViewerLoaderProps) {
   return (
     <BimViewer
+      materialOverrides={materialOverrides}
+      materials={materials}
       modelFormat={modelFormat}
       modelName={modelName}
       modelUrl={modelUrl}
