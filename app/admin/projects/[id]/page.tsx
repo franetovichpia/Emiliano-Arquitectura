@@ -10,6 +10,7 @@ import { AdminProjectInfoForm } from "@/components/forms/admin-project-info-form
 import { ProjectBimMaterialsEditor } from "@/components/admin/project-bim-materials-editor";
 import { ProjectBimUploader } from "@/components/admin/project-bim-uploader";
 import { ProjectMediaUploader } from "@/components/admin/project-media-uploader";
+import { ProjectProgressChartTypeSelector } from "@/components/admin/project-progress-chart-type-selector";
 import { ProjectProgressEditor } from "@/components/admin/project-progress-editor";
 import { ProjectStatusForm } from "@/components/admin/project-status-form";
 import { requireAdminSession } from "@/lib/auth/session";
@@ -201,9 +202,18 @@ export default async function AdminProjectPage({
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-sage">
-              Avance de obra (5D)
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-sage">
+                Avance de obra (5D)
+              </p>
+
+              <ProjectProgressChartTypeSelector
+                currentChartType={
+                  project.progressChartType
+                }
+                projectId={project._id.toString()}
+              />
+            </div>
 
             <p className="mt-3 text-sm text-white/55">
               Cargá el porcentaje de avance por
@@ -220,6 +230,8 @@ export default async function AdminProjectPage({
                     entry.plannedPercentage,
                   actualPercentage:
                     entry.actualPercentage,
+                  paidPercentage:
+                    entry.paidPercentage,
                   notes: entry.notes,
                 }),
               )}

@@ -28,12 +28,14 @@ import {
   Maximize2,
   Minimize2,
   RotateCcw,
+  Shapes,
 } from "lucide-react";
 
 import {
   applyBimMaterialFinish,
   createBimVisualEnvironment,
 } from "@/components/three/bim-visual-style";
+import { humanizeIfcCategory } from "@/components/three/bim-category-labels";
 import type { BimModelFormat } from "@/data/bim-projects";
 import type { BimMaterialInfo, MaterialFinish } from "@/lib/db/schemas";
 import { cn } from "@/utils/cn";
@@ -77,6 +79,10 @@ type StartWalkFunction = (
 
 type IsolateMaterialFunction = (
   colorHex: string | null,
+) => Promise<void>;
+
+type IsolateCategoryFunction = (
+  category: string | null,
 ) => Promise<void>;
 
 type MovementButtonProps = {
@@ -177,6 +183,11 @@ export function BimViewer({
       null,
     );
 
+  const isolateCategoryRef =
+    useRef<IsolateCategoryFunction | null>(
+      null,
+    );
+
   const activeViewerSessionRef =
     useRef<symbol | null>(null);
 
@@ -188,6 +199,21 @@ export function BimViewer({
   const [
     isMaterialMenuOpen,
     setIsMaterialMenuOpen,
+  ] = useState(false);
+
+  const [
+    availableCategories,
+    setAvailableCategories,
+  ] = useState<string[]>([]);
+
+  const [
+    selectedCategory,
+    setSelectedCategory,
+  ] = useState<string | null>(null);
+
+  const [
+    isCategoryMenuOpen,
+    setIsCategoryMenuOpen,
   ] = useState(false);
 
   const [status, setStatus] =
@@ -264,6 +290,7 @@ export function BimViewer({
         navigateRef.current = null;
         startWalkRef.current = null;
         isolateMaterialRef.current = null;
+        isolateCategoryRef.current = null;
 
         activeViewerSessionRef.current = null;
       }
@@ -294,6 +321,9 @@ export function BimViewer({
       setErrorMessage(null);
       setSelectedMaterialKey(null);
       setIsMaterialMenuOpen(false);
+      setAvailableCategories([]);
+      setSelectedCategory(null);
+      setIsCategoryMenuOpen(false);
 
       const [THREE, OBC] =
         await Promise.all([
@@ -731,6 +761,57 @@ export function BimViewer({
         await fragments.core.update(true);
       };
 
+      const categoryGroups =
+        modelItemIds.length > 0
+          ? await loadedModel.getItemsOfCategories(
+              [/.*/],
+            )
+          : {};
+
+      if (disposed) {
+        return;
+      }
+
+      setAvailableCategories(
+        Object.keys(categoryGroups).sort(),
+      );
+
+      isolateCategoryRef.current = async (
+        category,
+      ) => {
+        if (!category) {
+          await loadedModel.resetVisible();
+          await fragments.core.update(true);
+          return;
+        }
+
+        const matchIds =
+          categoryGroups[category] ?? [];
+
+        if (matchIds.length === 0) {
+          return;
+        }
+
+        const matchSet = new Set(matchIds);
+
+        const restIds =
+          modelItemIds.filter(
+            (id) => !matchSet.has(id),
+          );
+
+        await loadedModel.setVisible(
+          restIds,
+          false,
+        );
+
+        await loadedModel.setVisible(
+          matchIds,
+          true,
+        );
+
+        await fragments.core.update(true);
+      };
+
       if (modelItemIds.length > 0) {
         latestModelBox =
           await loadedModel.getMergedBox(
@@ -1075,9 +1156,24 @@ export function BimViewer({
     );
 
     setIsMaterialMenuOpen(false);
+    setSelectedCategory(null);
+    setIsCategoryMenuOpen(false);
 
     void isolateMaterialRef.current?.(
       material?.colorHex ?? null,
+    );
+  };
+
+  const handleSelectCategory = (
+    category: string | null,
+  ) => {
+    setSelectedCategory(category);
+    setIsCategoryMenuOpen(false);
+    setSelectedMaterialKey(null);
+    setIsMaterialMenuOpen(false);
+
+    void isolateCategoryRef.current?.(
+      category,
     );
   };
 
@@ -1342,6 +1438,91 @@ export function BimViewer({
 
                           <span className="truncate">
                             {material.name}
+                          </span>
+                        </button>
+                      ),
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
+            {availableCategories.length > 0 ? (
+              <div className="relative">
+                <button
+                  aria-expanded={
+                    isCategoryMenuOpen
+                  }
+                  aria-pressed={
+                    selectedCategory !== null
+                  }
+                  className={cn(
+                    "glass-interactive inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.57rem] font-semibold uppercase tracking-[0.13em] shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40",
+                    selectedCategory !== null
+                      ? "border-[#d17c5b]/60 bg-[#d17c5b] text-white"
+                      : "border-white/15 bg-[#071d31]/80 text-white",
+                  )}
+                  disabled={
+                    navigationDisabled
+                  }
+                  onClick={() =>
+                    setIsCategoryMenuOpen(
+                      (value) => !value,
+                    )
+                  }
+                  type="button"
+                >
+                  <Shapes
+                    aria-hidden="true"
+                    size={16}
+                    strokeWidth={1.6}
+                  />
+
+                  <span className="hidden sm:inline">
+                    Categorías
+                  </span>
+                </button>
+
+                {isCategoryMenuOpen ? (
+                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 max-h-72 w-56 overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-1.5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl">
+                    <button
+                      className={cn(
+                        "flex w-full items-center rounded-xl px-3 py-2 text-left text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-white/70 hover:bg-white/[0.08]",
+                        selectedCategory ===
+                          null &&
+                          "bg-white/[0.08] text-white",
+                      )}
+                      onClick={() =>
+                        handleSelectCategory(
+                          null,
+                        )
+                      }
+                      type="button"
+                    >
+                      Ver todo el modelo
+                    </button>
+
+                    {availableCategories.map(
+                      (category) => (
+                        <button
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs text-white/80 hover:bg-white/[0.08]",
+                            selectedCategory ===
+                              category &&
+                              "bg-white/[0.08] text-white",
+                          )}
+                          key={category}
+                          onClick={() =>
+                            handleSelectCategory(
+                              category,
+                            )
+                          }
+                          type="button"
+                        >
+                          <span className="truncate">
+                            {humanizeIfcCategory(
+                              category,
+                            )}
                           </span>
                         </button>
                       ),

@@ -13,6 +13,7 @@ import type {
   Project,
   ProjectCategory,
   ProjectMedia,
+  ProgressChartType,
   ProjectStatus,
   ZodiacSign,
 } from "@/lib/db/schemas";
@@ -176,6 +177,7 @@ export async function createProject(
     hasIfc: false,
     tools: [],
     media: [],
+    progressChartType: "barra",
     sortOrder: 0,
     createdAt: now,
     updatedAt: now,
@@ -309,6 +311,7 @@ type AddConstructionProgressInput = {
   stageName: string;
   plannedPercentage: number;
   actualPercentage: number;
+  paidPercentage: number;
   recordDate: Date;
   notes?: string;
   sortOrder?: number;
@@ -324,6 +327,7 @@ export async function addConstructionProgressEntry(
     stageName: input.stageName,
     plannedPercentage: input.plannedPercentage,
     actualPercentage: input.actualPercentage,
+    paidPercentage: input.paidPercentage,
     recordDate: input.recordDate,
     notes: input.notes,
     sortOrder: input.sortOrder ?? 0,
@@ -354,4 +358,21 @@ export async function deleteConstructionProgressEntry(
   await progress.deleteOne({
     _id: new ObjectId(entryId),
   });
+}
+
+export async function setProjectProgressChartType(
+  id: string,
+  chartType: ProgressChartType,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        progressChartType: chartType,
+        updatedAt: new Date(),
+      },
+    },
+  );
 }

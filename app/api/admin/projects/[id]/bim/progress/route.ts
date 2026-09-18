@@ -8,6 +8,7 @@ const addProgressSchema = z.object({
   stageName: z.string().min(1),
   plannedPercentage: z.number().min(0).max(100),
   actualPercentage: z.number().min(0).max(100),
+  paidPercentage: z.number().min(0).max(100),
   recordDate: z.coerce.date(),
   notes: z.string().optional(),
   sortOrder: z.number().optional(),

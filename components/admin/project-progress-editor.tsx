@@ -15,6 +15,7 @@ type ProgressEntry = {
   stageName: string;
   plannedPercentage: number;
   actualPercentage: number;
+  paidPercentage: number;
   notes?: string;
 };
 
@@ -42,6 +43,9 @@ export function ProjectProgressEditor({
     useState("");
 
   const [actualPercentage, setActualPercentage] =
+    useState("");
+
+  const [paidPercentage, setPaidPercentage] =
     useState("");
 
   const [notes, setNotes] = useState("");
@@ -81,6 +85,8 @@ export function ProjectProgressEditor({
               Number(plannedPercentage) || 0,
             actualPercentage:
               Number(actualPercentage) || 0,
+            paidPercentage:
+              Number(paidPercentage) || 0,
             recordDate: new Date().toISOString(),
             notes: notes.trim() || undefined,
             sortOrder: entries.length,
@@ -97,6 +103,7 @@ export function ProjectProgressEditor({
       setStageName("");
       setPlannedPercentage("");
       setActualPercentage("");
+      setPaidPercentage("");
       setNotes("");
       router.refresh();
     } catch (err: unknown) {
@@ -155,7 +162,8 @@ export function ProjectProgressEditor({
                 </p>
 
                 <p className="mt-0.5 text-[0.65rem] text-white/40">
-                  {entry.actualPercentage}% real ·{" "}
+                  {entry.actualPercentage}% obra ·{" "}
+                  {entry.paidPercentage}% pagado ·{" "}
                   {entry.plannedPercentage}%
                   planificado
                   {entry.notes
@@ -198,12 +206,12 @@ export function ProjectProgressEditor({
       )}
 
       <form
-        className="grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:grid-cols-2"
+        className="grid grid-cols-1 gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:grid-cols-3"
         onSubmit={handleSubmit}
       >
-        <div className="sm:col-span-2">
+        <div className="sm:col-span-3">
           <label className={labelClasses}>
-            Etapa
+            Etapa / categoría
           </label>
 
           <input
@@ -211,7 +219,7 @@ export function ProjectProgressEditor({
             onChange={(event) =>
               setStageName(event.target.value)
             }
-            placeholder="Ej: Demolición"
+            placeholder="Ej: Demolición, Pisos, Mampostería"
             value={stageName}
           />
         </div>
@@ -237,7 +245,7 @@ export function ProjectProgressEditor({
 
         <div>
           <label className={labelClasses}>
-            Real (%)
+            Obra realizada (%)
           </label>
 
           <input
@@ -254,7 +262,26 @@ export function ProjectProgressEditor({
           />
         </div>
 
-        <div className="sm:col-span-2">
+        <div>
+          <label className={labelClasses}>
+            Pagado (%)
+          </label>
+
+          <input
+            className={inputClasses}
+            max={100}
+            min={0}
+            onChange={(event) =>
+              setPaidPercentage(
+                event.target.value,
+              )
+            }
+            type="number"
+            value={paidPercentage}
+          />
+        </div>
+
+        <div className="sm:col-span-3">
           <label className={labelClasses}>
             Notas (opcional)
           </label>
@@ -269,7 +296,7 @@ export function ProjectProgressEditor({
           />
         </div>
 
-        <div className="sm:col-span-2 flex items-center justify-between gap-3">
+        <div className="sm:col-span-3 flex items-center justify-between gap-3">
           {error ? (
             <p
               className="flex items-center gap-2 text-xs text-[#ffb5a0]"

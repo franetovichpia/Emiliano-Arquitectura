@@ -8,6 +8,7 @@ import {
 
 import { BimViewerLoader } from "@/components/three/bim-viewer-loader";
 import { ConstructionProgressChart } from "@/components/projects/construction-progress-chart";
+import { ExportProgressPdfButton } from "@/components/projects/export-progress-pdf-button";
 import { Container } from "@/app/container";
 import {
   getPublicProjectBySlug,
@@ -165,7 +166,25 @@ export default async function ModelViewerPage({
 
         {progressEntries.length > 0 ? (
           <div className="mt-8">
+            <div className="mb-3 flex justify-end">
+              <ExportProgressPdfButton
+                entries={progressEntries.map(
+                  (entry) => ({
+                    stageName: entry.stageName,
+                    plannedPercentage:
+                      entry.plannedPercentage,
+                    actualPercentage:
+                      entry.actualPercentage,
+                    paidPercentage:
+                      entry.paidPercentage,
+                  }),
+                )}
+                projectTitle={project.title}
+              />
+            </div>
+
             <ConstructionProgressChart
+              chartType={project.progressChartType}
               entries={progressEntries.map((entry) => ({
                 id: entry._id.toString(),
                 stageName: entry.stageName,
@@ -173,6 +192,8 @@ export default async function ModelViewerPage({
                   entry.plannedPercentage,
                 actualPercentage:
                   entry.actualPercentage,
+                paidPercentage:
+                  entry.paidPercentage,
                 notes: entry.notes,
               }))}
             />

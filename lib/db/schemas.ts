@@ -86,6 +86,14 @@ export const bimModelSchema = z.object({
 });
 export type BimModel = z.infer<typeof bimModelSchema>;
 
+export const progressChartTypeSchema = z.enum([
+  "barra",
+  "torta",
+]);
+export type ProgressChartType = z.infer<
+  typeof progressChartTypeSchema
+>;
+
 export const projectSchema = z.object({
   slug: z.string(),
   title: z.string(),
@@ -105,6 +113,8 @@ export const projectSchema = z.object({
   coverMediaId: z.string().optional(),
   media: z.array(projectMediaSchema).default([]),
   bimModel: bimModelSchema.optional(),
+  progressChartType:
+    progressChartTypeSchema.default("barra"),
   sortOrder: z.number().default(0),
   publishedAt: z.date().optional(),
   createdAt: z.date(),
@@ -144,6 +154,7 @@ export const bimConstructionProgressSchema = z.object({
   stageName: z.string(),
   plannedPercentage: z.number().default(0),
   actualPercentage: z.number().default(0),
+  paidPercentage: z.number().default(0),
   recordDate: z.date(),
   notes: z.string().optional(),
   sortOrder: z.number().default(0),
