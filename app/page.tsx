@@ -12,11 +12,11 @@ export default function HomePage() {
   return (
     <main>
       <HeroSection />
-      <AboutSection />
-      <ServicesSection />
       <ProfessionalProjectsSection />
-      <AstrocasasSection />
+      <ServicesSection />
       <BimViewerSection />
+      <AboutSection />
+      <AstrocasasSection />
       <ContactSection />
       <ReflectionsSection />
       <NewFormsTeaserSection />

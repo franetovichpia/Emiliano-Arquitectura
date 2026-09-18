@@ -124,17 +124,20 @@ export function SiteHeader() {
           )}
         >
           {/* Identidad */}
-          <Link
-            aria-label="Emiliano Gabriel Rossotti, ir a la página principal"
-            className="group flex shrink-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
-            href="/#inicio"
-            onClick={closeMenu}
-          >
-            <span className="grid size-11 place-items-center rounded-xl border border-forest-deep/15 bg-white/40 font-serif text-lg text-forest-deep backdrop-blur-xl transition-colors duration-300 group-hover:border-terracotta/40 group-hover:bg-white/65">
+          <div className="flex shrink-0 items-center gap-3">
+            <Link
+              className="group grid size-11 place-items-center rounded-xl border border-forest-deep/15 bg-white/40 font-serif text-lg text-forest-deep backdrop-blur-xl transition-colors duration-300 hover:border-terracotta/40 hover:bg-white/65 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta"
+              href="/admin/login"
+            >
               EGR
-            </span>
+            </Link>
 
-            <span className="hidden leading-tight sm:block">
+            <Link
+              aria-label="Emiliano Gabriel Rossotti, ir a la página principal"
+              className="hidden leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta sm:block"
+              href="/#inicio"
+              onClick={closeMenu}
+            >
               <span className="block text-[0.67rem] font-semibold uppercase tracking-[0.16em] text-forest-deep">
                 Emiliano Gabriel
               </span>
@@ -142,8 +145,8 @@ export function SiteHeader() {
               <span className="mt-1 block text-[0.62rem] uppercase tracking-[0.16em] text-forest-deep/55">
                 Rossotti
               </span>
-            </span>
-          </Link>
+            </Link>
+          </div>
 
           {/* Navegación desktop */}
           <nav

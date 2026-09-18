@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 import { AdminLoginForm } from "@/components/forms/admin-login-form";
 
@@ -24,6 +26,18 @@ export default function AdminLoginPage() {
           backgroundSize: "5rem 5rem",
         }}
       />
+
+      <Link
+        className="absolute left-4 top-6 inline-flex items-center gap-2 text-[0.62rem] font-semibold uppercase tracking-[0.13em] text-white/50 hover:text-white/80 sm:left-8 sm:top-8"
+        href="/"
+      >
+        <ArrowLeft
+          aria-hidden="true"
+          size={14}
+          strokeWidth={1.8}
+        />
+        Volver a la página principal
+      </Link>
 
       <AdminLoginForm />
     </main>

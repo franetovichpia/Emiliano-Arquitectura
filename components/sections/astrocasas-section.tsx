@@ -1,5 +1,5 @@
 import { Reveal } from "@/components/motion/reveal";
-import { ProjectCarousel } from "@/components/projects/project-carousel";
+import { AstrocasasWall } from "@/components/projects/astrocasas-wall";
 import { Container } from "@/app/container";
 import { listPublicProjects } from "@/lib/db/collections";
 import { toPortfolioProject } from "@/lib/portfolio-project-adapter";
@@ -71,16 +71,7 @@ export async function AstrocasasSection() {
           className="mt-12"
           delay={0.14}
         >
-          {projects.length === 0 ? (
-            <p className="rounded-2xl border border-forest-deep/10 bg-white/60 p-8 text-sm text-ink/50">
-              Todavía no hay Astrocasas
-              publicadas.
-            </p>
-          ) : (
-            <ProjectCarousel
-              projects={projects}
-            />
-          )}
+          <AstrocasasWall projects={projects} />
         </Reveal>
       </Container>
     </section>

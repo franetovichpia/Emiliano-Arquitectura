@@ -1,6 +1,3 @@
-import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
-
 import { Reveal } from "@/components/motion/reveal";
 import { ProjectCarousel } from "@/components/projects/project-carousel";
 import { Container } from "@/app/container";
