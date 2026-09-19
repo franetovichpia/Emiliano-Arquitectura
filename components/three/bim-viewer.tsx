@@ -202,6 +202,11 @@ export function BimViewer({
   ] = useState(false);
 
   const [
+    availableMaterialColors,
+    setAvailableMaterialColors,
+  ] = useState<Set<string>>(new Set());
+
+  const [
     availableCategories,
     setAvailableCategories,
   ] = useState<string[]>([]);
@@ -321,6 +326,7 @@ export function BimViewer({
       setErrorMessage(null);
       setSelectedMaterialKey(null);
       setIsMaterialMenuOpen(false);
+      setAvailableMaterialColors(new Set());
       setAvailableCategories([]);
       setSelectedCategory(null);
       setIsCategoryMenuOpen(false);
@@ -705,7 +711,7 @@ export function BimViewer({
         return;
       }
 
-      const materialGroups =
+      const rawMaterialGroups =
         modelItemIds.length > 0
           ? await loadedModel.getItemsMaterialDefinition(
               modelItemIds,
@@ -716,12 +722,54 @@ export function BimViewer({
         return;
       }
 
+      /*
+       * El color viaja desde el worker por postMessage
+       * y pierde el prototipo de THREE.Color (queda
+       * como {r,g,b} planos), así que reconstruimos la
+       * instancia acá antes de usar getHexString(). De
+       * paso, esto también nos da el set de colores que
+       * realmente tienen geometría visible: el listado
+       * de materiales del admin puede incluir materiales
+       * sin geometría propia, y ofrecerlos como filtro
+       * los deja sin hacer nada al seleccionarlos.
+       */
+      const materialGroups = rawMaterialGroups.map(
+        (group) => {
+          const rawColor = group.definition.color;
+
+          const hex = new THREE.Color(
+            rawColor.r,
+            rawColor.g,
+            rawColor.b,
+          )
+            .getHexString()
+            .toLowerCase();
+
+          return { ...group, hex };
+        },
+      );
+
+      setAvailableMaterialColors(
+        new Set(
+          materialGroups.map((group) => group.hex),
+        ),
+      );
+
       isolateMaterialRef.current = async (
         colorHex,
       ) => {
         if (!colorHex) {
           await loadedModel.resetVisible();
-          await fragments.core.update(true);
+
+          if (latestModelBox) {
+            await frameModel(
+              latestModelBox,
+              true,
+            );
+          } else {
+            await fragments.core.update(true);
+          }
+
           return;
         }
 
@@ -733,11 +781,7 @@ export function BimViewer({
         const restIds: number[] = [];
 
         for (const group of materialGroups) {
-          const hex = group.definition.color
-            .getHexString()
-            .toLowerCase();
-
-          if (hex === target) {
+          if (group.hex === target) {
             matchIds.push(...group.localIds);
           } else {
             restIds.push(...group.localIds);
@@ -759,18 +803,65 @@ export function BimViewer({
         );
 
         await fragments.core.update(true);
+
+        /*
+         * Sin reencuadrar la cámara, un material que
+         * ocupa una fracción chica del modelo queda
+         * invisible al mismo zoom general (parece que
+         * "no pasó nada" o que "desapareció todo").
+         */
+        const matchBox =
+          await loadedModel.getMergedBox(
+            matchIds,
+          );
+
+        await frameModel(matchBox, true);
       };
 
-      const categoryGroups =
+      /*
+       * getItemsOfCategories() devuelve TODAS las
+       * categorías del grafo IFC (incluyendo entidades
+       * sin geometría propia, como IfcBuilding o los
+       * property sets), y aislar una de esas categorías
+       * ocultaba el modelo entero. getItemsWithGeometryCategories()
+       * en cambio está indexado 1 a 1 con modelItemIds,
+       * así que solo agrupa elementos que realmente
+       * tienen geometría para mostrar.
+       */
+      const geometryCategories =
         modelItemIds.length > 0
-          ? await loadedModel.getItemsOfCategories(
-              [/.*/],
-            )
-          : {};
+          ? await loadedModel.getItemsWithGeometryCategories()
+          : [];
 
       if (disposed) {
         return;
       }
+
+      const categoryGroups: Record<
+        string,
+        number[]
+      > = {};
+
+      geometryCategories.forEach(
+        (rawCategory, index) => {
+          if (!rawCategory) {
+            return;
+          }
+
+          const id = modelItemIds[index];
+
+          if (id === undefined) {
+            return;
+          }
+
+          const label =
+            humanizeIfcCategory(rawCategory);
+
+          (categoryGroups[label] ??= []).push(
+            id,
+          );
+        },
+      );
 
       setAvailableCategories(
         Object.keys(categoryGroups).sort(),
@@ -781,7 +872,16 @@ export function BimViewer({
       ) => {
         if (!category) {
           await loadedModel.resetVisible();
-          await fragments.core.update(true);
+
+          if (latestModelBox) {
+            await frameModel(
+              latestModelBox,
+              true,
+            );
+          } else {
+            await fragments.core.update(true);
+          }
+
           return;
         }
 
@@ -810,6 +910,13 @@ export function BimViewer({
         );
 
         await fragments.core.update(true);
+
+        const matchBox =
+          await loadedModel.getMergedBox(
+            matchIds,
+          );
+
+        await frameModel(matchBox, true);
       };
 
       if (modelItemIds.length > 0) {
@@ -1283,6 +1390,24 @@ export function BimViewer({
   const navigationDisabled =
     status !== "loaded";
 
+  /*
+   * El listado de materiales guardado en el proyecto
+   * puede incluir materiales sin geometría visible en
+   * este modelo (por ejemplo, materiales de elementos
+   * filtrados). Ofrecerlos como filtro los deja sin
+   * efecto al seleccionarlos, así que solo mostramos
+   * los que realmente están presentes.
+   */
+  const visibleMaterials = materials?.filter(
+    (material) =>
+      material.colorHex &&
+      availableMaterialColors.has(
+        material.colorHex
+          .replace("#", "")
+          .toLowerCase(),
+      ),
+  );
+
   return (
     <div
       aria-label={`Visor arquitectónico OpenBIM de ${modelName}`}
@@ -1352,7 +1477,8 @@ export function BimViewer({
           </div>
 
           <div className="pointer-events-auto flex items-center gap-2">
-            {materials && materials.length > 0 ? (
+            {visibleMaterials &&
+            visibleMaterials.length > 0 ? (
               <div className="relative">
                 <button
                   aria-expanded={
@@ -1409,7 +1535,7 @@ export function BimViewer({
                       Ver todo el modelo
                     </button>
 
-                    {materials.map(
+                    {visibleMaterials.map(
                       (material) => (
                         <button
                           className={cn(
@@ -1520,9 +1646,7 @@ export function BimViewer({
                           type="button"
                         >
                           <span className="truncate">
-                            {humanizeIfcCategory(
-                              category,
-                            )}
+                            {category}
                           </span>
                         </button>
                       ),

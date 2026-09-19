@@ -165,7 +165,11 @@ export function ProjectBimMaterialsEditor({
                 value={value}
               >
                 {finishOptions.map((finish) => (
-                  <option key={finish} value={finish}>
+                  <option
+                    className="bg-forest-deep text-paper"
+                    key={finish}
+                    value={finish}
+                  >
                     {finishLabels[finish]}
                   </option>
                 ))}

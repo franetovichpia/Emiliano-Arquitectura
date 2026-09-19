@@ -22,7 +22,12 @@ export default async function NewAdminProjectPage() {
     redirect("/admin/login");
   }
 
-  const categories = await listProjectCategories();
+  const categories = (
+    await listProjectCategories()
+  ).map((category) => ({
+    slug: category.slug,
+    name: category.name,
+  }));
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-[#071d31] px-4 py-16 text-white">
