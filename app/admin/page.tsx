@@ -6,6 +6,7 @@ import {
   BarChart3,
   FolderKanban,
   Layers,
+  Users,
 } from "lucide-react";
 
 import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
@@ -107,6 +108,28 @@ export default async function AdminDashboardPage() {
               Próximamente.
             </p>
           </div>
+
+          {session.role === "admin" ? (
+            <Link
+              className="group rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition-colors hover:border-terracotta/40"
+              href="/admin/users"
+            >
+              <Users
+                aria-hidden="true"
+                className="text-terracotta"
+                size={22}
+                strokeWidth={1.6}
+              />
+
+              <p className="mt-4 text-sm font-semibold text-paper">
+                Usuarios
+              </p>
+
+              <p className="mt-1 text-xs text-white/45">
+                Crear o eliminar accesos al panel.
+              </p>
+            </Link>
+          ) : null}
         </div>
 
         <div className="mt-10">

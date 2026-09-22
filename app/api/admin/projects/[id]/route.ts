@@ -3,13 +3,29 @@ import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
 import {
+  isProjectSlugTaken,
   updateProjectInfo,
   updateProjectStatus,
+  updateProjectTitleAndSlug,
 } from "@/lib/db/collections";
 import { projectStatusSchema } from "@/lib/db/schemas";
 
 const patchSchema = z.object({
   status: projectStatusSchema.optional(),
+  title: z
+    .string()
+    .trim()
+    .min(2, "Ingresá un título.")
+    .optional(),
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Solo minúsculas, números y guiones.",
+    )
+    .optional(),
   summary: z.string().optional(),
   location: z.string().optional(),
   client: z.string().optional(),
@@ -51,10 +67,43 @@ export async function PATCH(
     );
   }
 
-  const { status, ...info } = body.data;
+  const { status, title, slug, ...info } =
+    body.data;
 
   if (status) {
     await updateProjectStatus(id, status);
+  }
+
+  if (title || slug) {
+    if (!title || !slug) {
+      return NextResponse.json(
+        {
+          error:
+            "El título y el slug se guardan juntos.",
+        },
+        { status: 400 },
+      );
+    }
+
+    const slugTaken = await isProjectSlugTaken(
+      slug,
+      id,
+    );
+
+    if (slugTaken) {
+      return NextResponse.json(
+        {
+          error:
+            "Ese slug ya está en uso por otro proyecto.",
+        },
+        { status: 409 },
+      );
+    }
+
+    await updateProjectTitleAndSlug(id, {
+      title,
+      slug,
+    });
   }
 
   if (Object.keys(info).length > 0) {

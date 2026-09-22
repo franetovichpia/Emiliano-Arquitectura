@@ -1,3 +1,4 @@
+import bcrypt from "bcryptjs";
 import { ObjectId } from "mongodb";
 import type { Collection, WithId } from "mongodb";
 
@@ -53,6 +54,113 @@ export async function getAdminUsersCollection(): Promise<
 > {
   const db = await getDb();
   return db.collection<AdminUser>("adminUsers");
+}
+
+export type AdminUserSummary = {
+  id: string;
+  email: string;
+  fullName?: string;
+  role: AdminUser["role"];
+  createdAt: string;
+};
+
+export async function listAdminUsers(): Promise<
+  AdminUserSummary[]
+> {
+  const adminUsers = await getAdminUsersCollection();
+
+  const users = await adminUsers
+    .find({})
+    .sort({ createdAt: 1 })
+    .toArray();
+
+  return users.map((user) => ({
+    id: user._id.toString(),
+    email: user.email,
+    fullName: user.fullName,
+    role: user.role,
+    createdAt: user.createdAt.toISOString(),
+  }));
+}
+
+export async function isAdminEmailTaken(
+  email: string,
+): Promise<boolean> {
+  const adminUsers = await getAdminUsersCollection();
+
+  const existing = await adminUsers.findOne({
+    email: email.toLowerCase(),
+  });
+
+  return existing !== null;
+}
+
+type CreateAdminUserInput = {
+  email: string;
+  password: string;
+  fullName?: string;
+  role: AdminUser["role"];
+};
+
+export async function createAdminUser(
+  input: CreateAdminUserInput,
+): Promise<AdminUserSummary> {
+  const adminUsers = await getAdminUsersCollection();
+  const passwordHash = await bcrypt.hash(
+    input.password,
+    12,
+  );
+
+  const now = new Date();
+
+  const doc: AdminUser = {
+    email: input.email.toLowerCase(),
+    passwordHash,
+    fullName: input.fullName,
+    role: input.role,
+    createdAt: now,
+  };
+
+  const result = await adminUsers.insertOne(doc);
+
+  return {
+    id: result.insertedId.toString(),
+    email: doc.email,
+    fullName: doc.fullName,
+    role: doc.role,
+    createdAt: now.toISOString(),
+  };
+}
+
+export async function deleteAdminUser(
+  id: string,
+): Promise<void> {
+  const adminUsers = await getAdminUsersCollection();
+
+  const target = await adminUsers.findOne({
+    _id: new ObjectId(id),
+  });
+
+  if (!target) {
+    return;
+  }
+
+  if (target.role === "admin") {
+    const adminCount =
+      await adminUsers.countDocuments({
+        role: "admin",
+      });
+
+    if (adminCount <= 1) {
+      throw new Error(
+        "No se puede eliminar el único usuario administrador.",
+      );
+    }
+  }
+
+  await adminUsers.deleteOne({
+    _id: new ObjectId(id),
+  });
 }
 
 export async function listPublicProjects(
@@ -245,6 +353,43 @@ export async function updateProjectInfo(
     {
       $set: {
         ...input,
+        updatedAt: new Date(),
+      },
+    },
+  );
+}
+
+export async function isProjectSlugTaken(
+  slug: string,
+  excludeId: string,
+): Promise<boolean> {
+  const projects = await getProjectsCollection();
+
+  const existing = await projects.findOne({
+    slug,
+    _id: { $ne: new ObjectId(excludeId) },
+  });
+
+  return existing !== null;
+}
+
+type UpdateProjectTitleSlugInput = {
+  title: string;
+  slug: string;
+};
+
+export async function updateProjectTitleAndSlug(
+  id: string,
+  input: UpdateProjectTitleSlugInput,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        title: input.title,
+        slug: input.slug,
         updatedAt: new Date(),
       },
     },

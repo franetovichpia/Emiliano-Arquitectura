@@ -22,6 +22,7 @@ import {
   ArrowRight,
   ArrowUp,
   Boxes,
+  Check,
   Footprints,
   Layers,
   Loader2,
@@ -29,11 +30,13 @@ import {
   Minimize2,
   RotateCcw,
   Shapes,
+  SlidersHorizontal,
 } from "lucide-react";
 
 import {
   applyBimMaterialFinish,
   createBimVisualEnvironment,
+  getMaterialDisplayName,
 } from "@/components/three/bim-visual-style";
 import { humanizeIfcCategory } from "@/components/three/bim-category-labels";
 import type { BimModelFormat } from "@/data/bim-projects";
@@ -77,12 +80,13 @@ type StartWalkFunction = (
   clientY: number,
 ) => Promise<boolean>;
 
-type IsolateMaterialFunction = (
-  colorHex: string | null,
-) => Promise<void>;
+type VisibilityMode = "ghost" | "hide";
 
-type IsolateCategoryFunction = (
-  category: string | null,
+type ApplySelectionFunction = (
+  categories: ReadonlySet<string>,
+  materialKeys: ReadonlySet<string>,
+  mode: VisibilityMode,
+  ghostOpacity: number,
 ) => Promise<void>;
 
 type MovementButtonProps = {
@@ -95,6 +99,13 @@ type MovementButtonProps = {
   ) => void;
   className?: string;
 };
+
+/*
+ * Color con el que se resalta lo seleccionado
+ * en modo "Transparentar", para que se distinga
+ * claramente sobre el resto del modelo atenuado.
+ */
+const GHOST_HIGHLIGHT_COLOR = "#3fb6ff";
 
 const navigationByKey: Record<
   string,
@@ -178,13 +189,8 @@ export function BimViewer({
   const startWalkRef =
     useRef<StartWalkFunction | null>(null);
 
-  const isolateMaterialRef =
-    useRef<IsolateMaterialFunction | null>(
-      null,
-    );
-
-  const isolateCategoryRef =
-    useRef<IsolateCategoryFunction | null>(
+  const applySelectionRef =
+    useRef<ApplySelectionFunction | null>(
       null,
     );
 
@@ -192,14 +198,23 @@ export function BimViewer({
     useRef<symbol | null>(null);
 
   const [
-    selectedMaterialKey,
-    setSelectedMaterialKey,
-  ] = useState<string | null>(null);
+    selectedCategories,
+    setSelectedCategories,
+  ] = useState<Set<string>>(new Set());
 
   const [
-    isMaterialMenuOpen,
-    setIsMaterialMenuOpen,
-  ] = useState(false);
+    selectedMaterialKeys,
+    setSelectedMaterialKeys,
+  ] = useState<Set<string>>(new Set());
+
+  const [visibilityMode, setVisibilityMode] =
+    useState<VisibilityMode>("ghost");
+
+  const [ghostOpacity, setGhostOpacity] =
+    useState(0.16);
+
+  const [isFilterPanelOpen, setIsFilterPanelOpen] =
+    useState(false);
 
   const [
     availableMaterialColors,
@@ -210,16 +225,6 @@ export function BimViewer({
     availableCategories,
     setAvailableCategories,
   ] = useState<string[]>([]);
-
-  const [
-    selectedCategory,
-    setSelectedCategory,
-  ] = useState<string | null>(null);
-
-  const [
-    isCategoryMenuOpen,
-    setIsCategoryMenuOpen,
-  ] = useState(false);
 
   const [status, setStatus] =
     useState<ViewerStatus>("initializing");
@@ -294,8 +299,7 @@ export function BimViewer({
         resetViewRef.current = null;
         navigateRef.current = null;
         startWalkRef.current = null;
-        isolateMaterialRef.current = null;
-        isolateCategoryRef.current = null;
+        applySelectionRef.current = null;
 
         activeViewerSessionRef.current = null;
       }
@@ -324,12 +328,11 @@ export function BimViewer({
       setStage("Inicializando entorno OpenBIM");
       setProgress(0);
       setErrorMessage(null);
-      setSelectedMaterialKey(null);
-      setIsMaterialMenuOpen(false);
+      setSelectedCategories(new Set());
+      setSelectedMaterialKeys(new Set());
+      setIsFilterPanelOpen(false);
       setAvailableMaterialColors(new Set());
       setAvailableCategories([]);
-      setSelectedCategory(null);
-      setIsCategoryMenuOpen(false);
 
       const [THREE, OBC] =
         await Promise.all([
@@ -755,69 +758,6 @@ export function BimViewer({
         ),
       );
 
-      isolateMaterialRef.current = async (
-        colorHex,
-      ) => {
-        if (!colorHex) {
-          await loadedModel.resetVisible();
-
-          if (latestModelBox) {
-            await frameModel(
-              latestModelBox,
-              true,
-            );
-          } else {
-            await fragments.core.update(true);
-          }
-
-          return;
-        }
-
-        const target = colorHex
-          .replace("#", "")
-          .toLowerCase();
-
-        const matchIds: number[] = [];
-        const restIds: number[] = [];
-
-        for (const group of materialGroups) {
-          if (group.hex === target) {
-            matchIds.push(...group.localIds);
-          } else {
-            restIds.push(...group.localIds);
-          }
-        }
-
-        if (matchIds.length === 0) {
-          return;
-        }
-
-        await loadedModel.setVisible(
-          restIds,
-          false,
-        );
-
-        await loadedModel.setVisible(
-          matchIds,
-          true,
-        );
-
-        await fragments.core.update(true);
-
-        /*
-         * Sin reencuadrar la cámara, un material que
-         * ocupa una fracción chica del modelo queda
-         * invisible al mismo zoom general (parece que
-         * "no pasó nada" o que "desapareció todo").
-         */
-        const matchBox =
-          await loadedModel.getMergedBox(
-            matchIds,
-          );
-
-        await frameModel(matchBox, true);
-      };
-
       /*
        * getItemsOfCategories() devuelve TODAS las
        * categorías del grafo IFC (incluyendo entidades
@@ -867,13 +807,54 @@ export function BimViewer({
         Object.keys(categoryGroups).sort(),
       );
 
-      isolateCategoryRef.current = async (
-        category,
+      /*
+       * Modo ghost (por defecto): lo no seleccionado
+       * se vuelve semitransparente pero sigue ahí, así
+       * que la cámara no necesita moverse — el usuario
+       * conserva su punto de vista.
+       *
+       * Modo hide: lo no seleccionado se oculta del
+       * todo, así que si la reencuadramos hacia la
+       * selección (igual que "Restaurar vista general"),
+       * porque si no puede quedar fuera de cuadro.
+       */
+      applySelectionRef.current = async (
+        categories,
+        materialKeys,
+        mode,
+        ghostOpacityValue,
       ) => {
-        if (!category) {
-          await loadedModel.resetVisible();
+        const matchSet = new Set<number>();
 
-          if (latestModelBox) {
+        for (const category of categories) {
+          for (const id of categoryGroups[
+            category
+          ] ?? []) {
+            matchSet.add(id);
+          }
+        }
+
+        for (const group of materialGroups) {
+          if (materialKeys.has(group.hex)) {
+            for (const id of group.localIds) {
+              matchSet.add(id);
+            }
+          }
+        }
+
+        if (matchSet.size === 0) {
+          await loadedModel.resetVisible();
+          await loadedModel.resetOpacity(
+            undefined,
+          );
+          await loadedModel.resetColor(
+            undefined,
+          );
+
+          if (
+            mode === "hide" &&
+            latestModelBox
+          ) {
             await frameModel(
               latestModelBox,
               true,
@@ -885,38 +866,70 @@ export function BimViewer({
           return;
         }
 
-        const matchIds =
-          categoryGroups[category] ?? [];
+        const matchIds = Array.from(matchSet);
 
-        if (matchIds.length === 0) {
+        const restIds = modelItemIds.filter(
+          (id) => !matchSet.has(id),
+        );
+
+        if (mode === "hide") {
+          await loadedModel.resetOpacity(
+            undefined,
+          );
+          await loadedModel.resetColor(
+            undefined,
+          );
+
+          await loadedModel.setVisible(
+            restIds,
+            false,
+          );
+
+          await loadedModel.setVisible(
+            matchIds,
+            true,
+          );
+
+          await fragments.core.update(true);
+
+          const matchBox =
+            await loadedModel.getMergedBox(
+              matchIds,
+            );
+
+          await frameModel(matchBox, true);
+
           return;
         }
 
-        const matchSet = new Set(matchIds);
+        await loadedModel.resetVisible();
 
-        const restIds =
-          modelItemIds.filter(
-            (id) => !matchSet.has(id),
-          );
-
-        await loadedModel.setVisible(
+        /*
+         * Lo no seleccionado vuelve a su color
+         * original (por si venía resaltado de una
+         * selección anterior) y se atenúa.
+         */
+        await loadedModel.resetColor(restIds);
+        await loadedModel.setOpacity(
           restIds,
-          false,
+          ghostOpacityValue,
         );
 
-        await loadedModel.setVisible(
+        /*
+         * Lo seleccionado se resalta con un color
+         * bien distinguible sobre el resto
+         * transparentado.
+         */
+        await loadedModel.setColor(
           matchIds,
-          true,
+          new THREE.Color(
+            GHOST_HIGHLIGHT_COLOR,
+          ),
         );
+
+        await loadedModel.resetOpacity(matchIds);
 
         await fragments.core.update(true);
-
-        const matchBox =
-          await loadedModel.getMergedBox(
-            matchIds,
-          );
-
-        await frameModel(matchBox, true);
       };
 
       if (modelItemIds.length > 0) {
@@ -1255,32 +1268,83 @@ export function BimViewer({
     void navigateRef.current?.(action);
   };
 
-  const handleSelectMaterial = (
-    material: BimMaterialInfo | null,
+  const toggleCategory = (
+    category: string,
   ) => {
-    setSelectedMaterialKey(
-      material?.key ?? null,
-    );
+    const next = new Set(selectedCategories);
 
-    setIsMaterialMenuOpen(false);
-    setSelectedCategory(null);
-    setIsCategoryMenuOpen(false);
+    if (next.has(category)) {
+      next.delete(category);
+    } else {
+      next.add(category);
+    }
 
-    void isolateMaterialRef.current?.(
-      material?.colorHex ?? null,
+    setSelectedCategories(next);
+
+    void applySelectionRef.current?.(
+      next,
+      selectedMaterialKeys,
+      visibilityMode,
+      ghostOpacity,
     );
   };
 
-  const handleSelectCategory = (
-    category: string | null,
+  const toggleMaterial = (
+    material: BimMaterialInfo,
   ) => {
-    setSelectedCategory(category);
-    setIsCategoryMenuOpen(false);
-    setSelectedMaterialKey(null);
-    setIsMaterialMenuOpen(false);
+    const next = new Set(selectedMaterialKeys);
 
-    void isolateCategoryRef.current?.(
-      category,
+    if (next.has(material.key)) {
+      next.delete(material.key);
+    } else {
+      next.add(material.key);
+    }
+
+    setSelectedMaterialKeys(next);
+
+    void applySelectionRef.current?.(
+      selectedCategories,
+      next,
+      visibilityMode,
+      ghostOpacity,
+    );
+  };
+
+  const handleClearSelection = () => {
+    setSelectedCategories(new Set());
+    setSelectedMaterialKeys(new Set());
+
+    void applySelectionRef.current?.(
+      new Set(),
+      new Set(),
+      visibilityMode,
+      ghostOpacity,
+    );
+  };
+
+  const handleSetVisibilityMode = (
+    mode: VisibilityMode,
+  ) => {
+    setVisibilityMode(mode);
+
+    void applySelectionRef.current?.(
+      selectedCategories,
+      selectedMaterialKeys,
+      mode,
+      ghostOpacity,
+    );
+  };
+
+  const handleGhostOpacityChange = (
+    value: number,
+  ) => {
+    setGhostOpacity(value);
+
+    void applySelectionRef.current?.(
+      selectedCategories,
+      selectedMaterialKeys,
+      visibilityMode,
+      value,
     );
   };
 
@@ -1477,21 +1541,26 @@ export function BimViewer({
           </div>
 
           <div className="pointer-events-auto flex items-center gap-2">
-            {visibleMaterials &&
-            visibleMaterials.length > 0 ? (
+            {availableCategories.length > 0 ||
+            (visibleMaterials &&
+              visibleMaterials.length > 0) ? (
               <div className="relative">
                 <button
                   aria-expanded={
-                    isMaterialMenuOpen
+                    isFilterPanelOpen
                   }
                   aria-pressed={
-                    selectedMaterialKey !==
-                    null
+                    selectedCategories.size >
+                      0 ||
+                    selectedMaterialKeys.size >
+                      0
                   }
                   className={cn(
                     "glass-interactive inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.57rem] font-semibold uppercase tracking-[0.13em] shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40",
-                    selectedMaterialKey !==
-                      null
+                    selectedCategories.size >
+                      0 ||
+                      selectedMaterialKeys.size >
+                        0
                       ? "border-[#d17c5b]/60 bg-[#d17c5b] text-white"
                       : "border-white/15 bg-[#071d31]/80 text-white",
                   )}
@@ -1499,158 +1568,276 @@ export function BimViewer({
                     navigationDisabled
                   }
                   onClick={() =>
-                    setIsMaterialMenuOpen(
+                    setIsFilterPanelOpen(
                       (value) => !value,
                     )
                   }
                   type="button"
                 >
-                  <Layers
+                  <SlidersHorizontal
                     aria-hidden="true"
                     size={16}
                     strokeWidth={1.6}
                   />
 
                   <span className="hidden sm:inline">
-                    Materiales
+                    Filtros
                   </span>
+
+                  {selectedCategories.size +
+                    selectedMaterialKeys.size >
+                  0 ? (
+                    <span className="grid size-4 place-items-center rounded-full bg-white/25 text-[0.55rem] font-bold">
+                      {selectedCategories.size +
+                        selectedMaterialKeys.size}
+                    </span>
+                  ) : null}
                 </button>
 
-                {isMaterialMenuOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 max-h-72 w-56 overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-1.5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl">
-                    <button
-                      className={cn(
-                        "flex w-full items-center rounded-xl px-3 py-2 text-left text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-white/70 hover:bg-white/[0.08]",
-                        selectedMaterialKey ===
-                          null &&
-                          "bg-white/[0.08] text-white",
-                      )}
-                      onClick={() =>
-                        handleSelectMaterial(
-                          null,
-                        )
-                      }
-                      type="button"
-                    >
-                      Ver todo el modelo
-                    </button>
-
-                    {visibleMaterials.map(
-                      (material) => (
+                {isFilterPanelOpen ? (
+                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 w-[min(92vw,34rem)] rounded-2xl border border-white/15 bg-[#071d31]/95 p-4 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                      <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
                         <button
                           className={cn(
-                            "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs text-white/80 hover:bg-white/[0.08]",
-                            selectedMaterialKey ===
-                              material.key &&
-                              "bg-white/[0.08] text-white",
+                            "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                            visibilityMode ===
+                              "ghost"
+                              ? "bg-[#d17c5b] text-white"
+                              : "text-white/55 hover:text-white/80",
                           )}
-                          key={material.key}
                           onClick={() =>
-                            handleSelectMaterial(
-                              material,
+                            handleSetVisibilityMode(
+                              "ghost",
                             )
                           }
                           type="button"
                         >
-                          <span
-                            aria-hidden="true"
-                            className="size-3 shrink-0 rounded-full border border-white/25"
-                            style={{
-                              backgroundColor:
-                                material.colorHex ??
-                                "#5f91ad",
-                            }}
-                          />
-
-                          <span className="truncate">
-                            {material.name}
-                          </span>
+                          Transparentar
                         </button>
-                      ),
-                    )}
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
 
-            {availableCategories.length > 0 ? (
-              <div className="relative">
-                <button
-                  aria-expanded={
-                    isCategoryMenuOpen
-                  }
-                  aria-pressed={
-                    selectedCategory !== null
-                  }
-                  className={cn(
-                    "glass-interactive inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.57rem] font-semibold uppercase tracking-[0.13em] shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40",
-                    selectedCategory !== null
-                      ? "border-[#d17c5b]/60 bg-[#d17c5b] text-white"
-                      : "border-white/15 bg-[#071d31]/80 text-white",
-                  )}
-                  disabled={
-                    navigationDisabled
-                  }
-                  onClick={() =>
-                    setIsCategoryMenuOpen(
-                      (value) => !value,
-                    )
-                  }
-                  type="button"
-                >
-                  <Shapes
-                    aria-hidden="true"
-                    size={16}
-                    strokeWidth={1.6}
-                  />
-
-                  <span className="hidden sm:inline">
-                    Categorías
-                  </span>
-                </button>
-
-                {isCategoryMenuOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 max-h-72 w-56 overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-1.5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl">
-                    <button
-                      className={cn(
-                        "flex w-full items-center rounded-xl px-3 py-2 text-left text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-white/70 hover:bg-white/[0.08]",
-                        selectedCategory ===
-                          null &&
-                          "bg-white/[0.08] text-white",
-                      )}
-                      onClick={() =>
-                        handleSelectCategory(
-                          null,
-                        )
-                      }
-                      type="button"
-                    >
-                      Ver todo el modelo
-                    </button>
-
-                    {availableCategories.map(
-                      (category) => (
                         <button
                           className={cn(
-                            "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs text-white/80 hover:bg-white/[0.08]",
-                            selectedCategory ===
-                              category &&
-                              "bg-white/[0.08] text-white",
+                            "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                            visibilityMode ===
+                              "hide"
+                              ? "bg-[#d17c5b] text-white"
+                              : "text-white/55 hover:text-white/80",
                           )}
-                          key={category}
                           onClick={() =>
-                            handleSelectCategory(
-                              category,
+                            handleSetVisibilityMode(
+                              "hide",
                             )
                           }
                           type="button"
                         >
-                          <span className="truncate">
-                            {category}
-                          </span>
+                          Ocultar
                         </button>
-                      ),
-                    )}
+                      </div>
+
+                      <button
+                        className="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45 hover:text-white/75 disabled:cursor-not-allowed disabled:opacity-30"
+                        disabled={
+                          selectedCategories.size ===
+                            0 &&
+                          selectedMaterialKeys.size ===
+                            0
+                        }
+                        onClick={
+                          handleClearSelection
+                        }
+                        type="button"
+                      >
+                        Limpiar selección
+                      </button>
+                    </div>
+
+                    {visibilityMode ===
+                    "ghost" ? (
+                      <div className="flex items-center gap-3 border-b border-white/10 py-3">
+                        <label
+                          className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45"
+                          htmlFor="ghost-opacity-range"
+                        >
+                          Transparencia
+                        </label>
+
+                        <input
+                          className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#d17c5b]"
+                          id="ghost-opacity-range"
+                          max={1}
+                          min={0}
+                          onChange={(event) =>
+                            handleGhostOpacityChange(
+                              Number(
+                                event.target
+                                  .value,
+                              ),
+                            )
+                          }
+                          step={0.05}
+                          type="range"
+                          value={ghostOpacity}
+                        />
+
+                        <span className="w-9 shrink-0 text-right text-[0.6rem] text-white/55">
+                          {Math.round(
+                            ghostOpacity * 100,
+                          )}
+                          %
+                        </span>
+                      </div>
+                    ) : null}
+
+                    <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      {availableCategories.length >
+                      0 ? (
+                        <div className="min-w-0">
+                          <p className="mb-2 flex items-center gap-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/45">
+                            <Shapes
+                              aria-hidden="true"
+                              size={12}
+                              strokeWidth={1.8}
+                            />
+                            Categorías
+                          </p>
+
+                          <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                            {availableCategories.map(
+                              (category) => {
+                                const checked =
+                                  selectedCategories.has(
+                                    category,
+                                  );
+
+                                return (
+                                  <button
+                                    className={cn(
+                                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
+                                      checked
+                                        ? "bg-white/[0.1] text-white"
+                                        : "text-white/70",
+                                    )}
+                                    key={
+                                      category
+                                    }
+                                    onClick={() =>
+                                      toggleCategory(
+                                        category,
+                                      )
+                                    }
+                                    type="button"
+                                  >
+                                    <span
+                                      className={cn(
+                                        "grid size-3.5 shrink-0 place-items-center rounded border",
+                                        checked
+                                          ? "border-[#d17c5b] bg-[#d17c5b]"
+                                          : "border-white/30",
+                                      )}
+                                    >
+                                      {checked ? (
+                                        <Check
+                                          aria-hidden="true"
+                                          className="text-white"
+                                          size={10}
+                                          strokeWidth={3}
+                                        />
+                                      ) : null}
+                                    </span>
+
+                                    <span className="truncate">
+                                      {category}
+                                    </span>
+                                  </button>
+                                );
+                              },
+                            )}
+                          </div>
+                        </div>
+                      ) : null}
+
+                      {visibleMaterials &&
+                      visibleMaterials.length >
+                        0 ? (
+                        <div className="min-w-0">
+                          <p className="mb-2 flex items-center gap-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/45">
+                            <Layers
+                              aria-hidden="true"
+                              size={12}
+                              strokeWidth={1.8}
+                            />
+                            Materiales
+                          </p>
+
+                          <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                            {visibleMaterials.map(
+                              (material) => {
+                                const checked =
+                                  selectedMaterialKeys.has(
+                                    material.key,
+                                  );
+
+                                return (
+                                  <button
+                                    className={cn(
+                                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
+                                      checked
+                                        ? "bg-white/[0.1] text-white"
+                                        : "text-white/70",
+                                    )}
+                                    key={
+                                      material.key
+                                    }
+                                    onClick={() =>
+                                      toggleMaterial(
+                                        material,
+                                      )
+                                    }
+                                    type="button"
+                                  >
+                                    <span
+                                      className={cn(
+                                        "grid size-3.5 shrink-0 place-items-center rounded border",
+                                        checked
+                                          ? "border-[#d17c5b] bg-[#d17c5b]"
+                                          : "border-white/30",
+                                      )}
+                                    >
+                                      {checked ? (
+                                        <Check
+                                          aria-hidden="true"
+                                          className="text-white"
+                                          size={10}
+                                          strokeWidth={3}
+                                        />
+                                      ) : null}
+                                    </span>
+
+                                    <span
+                                      aria-hidden="true"
+                                      className="size-3 shrink-0 rounded-full border border-white/25"
+                                      style={{
+                                        backgroundColor:
+                                          material.colorHex ??
+                                          "#5f91ad",
+                                      }}
+                                    />
+
+                                    <span className="truncate">
+                                      {getMaterialDisplayName(
+                                        material,
+                                        materialOverrides,
+                                      )}
+                                    </span>
+                                  </button>
+                                );
+                              },
+                            )}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 ) : null}
               </div>

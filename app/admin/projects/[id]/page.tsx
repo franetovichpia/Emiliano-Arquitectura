@@ -13,6 +13,7 @@ import { ProjectMediaUploader } from "@/components/admin/project-media-uploader"
 import { ProjectProgressChartTypeSelector } from "@/components/admin/project-progress-chart-type-selector";
 import { ProjectProgressEditor } from "@/components/admin/project-progress-editor";
 import { ProjectStatusForm } from "@/components/admin/project-status-form";
+import { ProjectTitleSlugForm } from "@/components/admin/project-title-slug-form";
 import { requireAdminSession } from "@/lib/auth/session";
 import {
   getAdminProjectById,
@@ -81,6 +82,12 @@ export default async function AdminProjectPage({
         <div className="mt-10 space-y-6">
           <ProjectStatusForm
             currentStatus={project.status}
+            projectId={project._id.toString()}
+          />
+
+          <ProjectTitleSlugForm
+            initialSlug={project.slug}
+            initialTitle={project.title}
             projectId={project._id.toString()}
           />
 

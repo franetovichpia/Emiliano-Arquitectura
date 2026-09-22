@@ -208,6 +208,85 @@ export const finishProfiles: Record<
   default: defaultProfile,
 };
 
+export const finishDisplayLabels: Record<
+  Exclude<MaterialFinish, "auto">,
+  string
+> = {
+  vidrio: "Vidrio",
+  espejo: "Espejo",
+  metal: "Metal",
+  "metal-cepillado": "Metal cepillado",
+  madera: "Madera",
+  hormigon: "Hormigón",
+  piedra: "Piedra",
+  ceramica: "Cerámica",
+  vegetacion: "Vegetación",
+  default: "Otro material",
+};
+
+const GENERIC_MATERIAL_NAME_PATTERN =
+  /^Material(?:\s#[0-9a-f]{3,8}|\s\d+)$/i;
+
+/*
+ * @thatopen/fragments no expone el nombre IFC
+ * del material en tiempo de ejecución, así que
+ * el extractor lo guarda como "Material #hex"
+ * (ver bim-material-extraction.ts). Ese nombre
+ * no sirve para mostrárselo a un cliente, así
+ * que acá lo reemplazamos por el acabado real
+ * (vidrio, hormigón, madera...), respetando la
+ * anulación manual del admin si existe.
+ */
+export function getMaterialDisplayName(
+  material: {
+    name: string;
+    colorHex?: string;
+    suggestedFinish?: MaterialFinish;
+  },
+  materialOverrides?: Record<
+    string,
+    MaterialFinish
+  >,
+): string {
+  const trimmedName = material.name.trim();
+
+  const looksGeneric =
+    !trimmedName ||
+    GENERIC_MATERIAL_NAME_PATTERN.test(
+      trimmedName,
+    );
+
+  if (!looksGeneric) {
+    return trimmedName;
+  }
+
+  const colorKey = material.colorHex
+    ?.replace("#", "")
+    .toLowerCase();
+
+  const overrideFinish = colorKey
+    ? materialOverrides?.[colorKey]
+    : undefined;
+
+  const suggestedFinish =
+    material.suggestedFinish &&
+    material.suggestedFinish !== "auto"
+      ? material.suggestedFinish
+      : "default";
+
+  const effectiveFinish =
+    overrideFinish && overrideFinish !== "auto"
+      ? overrideFinish
+      : suggestedFinish;
+
+  return finishDisplayLabels[
+    effectiveFinish as Exclude<
+      MaterialFinish,
+      "auto"
+    >
+  ];
+}
+
 type MaterialClassification = {
   finish: Exclude<MaterialFinish, "auto">;
   profile: MaterialProfile;
@@ -351,10 +430,106 @@ function classifyMaterial(
     };
   }
 
+  const hslGuess = classifyByHsl(material);
+
+  if (hslGuess) {
+    return hslGuess;
+  }
+
   return {
     finish: "default",
     profile: defaultProfile,
   };
+}
+
+/*
+ * Último recurso cuando el color no está en
+ * ninguna de las listas curadas de arriba (esas
+ * listas se armaron mirando proyectos puntuales,
+ * así que un edificio nuevo con paleta distinta
+ * cae siempre en "default"). Analizando tono,
+ * saturación y luminosidad en vez de un color
+ * exacto, esto generaliza mucho mejor a paletas
+ * que nunca vimos, a costa de ser una adivinanza:
+ * puede errar en casos puntuales.
+ */
+function classifyByHsl(
+  material: FinishableMaterial,
+): MaterialClassification | null {
+  if (!material.color) {
+    return null;
+  }
+
+  const hsl = { h: 0, s: 0, l: 0 };
+  material.color.getHSL(hsl);
+
+  const hueDeg = hsl.h * 360;
+  const { s, l } = hsl;
+
+  if (hueDeg >= 70 && hueDeg <= 165 && s > 0.12) {
+    return {
+      finish: "vegetacion",
+      profile: vegetationProfile,
+    };
+  }
+
+  if (
+    hueDeg >= 10 &&
+    hueDeg <= 45 &&
+    s > 0.18 &&
+    l > 0.12 &&
+    l < 0.72
+  ) {
+    return {
+      finish: "madera",
+      profile: woodProfile,
+    };
+  }
+
+  if (s < 0.12) {
+    if (l > 0.88) {
+      return {
+        finish: "ceramica",
+        profile: ceramicProfile,
+      };
+    }
+
+    if (l > 0.5) {
+      return {
+        finish: "hormigon",
+        profile: concreteProfile,
+      };
+    }
+
+    if (l > 0.22) {
+      return {
+        finish: "metal-cepillado",
+        profile: brushedMetalProfile,
+      };
+    }
+
+    return null;
+  }
+
+  if (
+    hueDeg >= 180 &&
+    hueDeg <= 250 &&
+    s < 0.25
+  ) {
+    return {
+      finish: "metal-cepillado",
+      profile: brushedMetalProfile,
+    };
+  }
+
+  if (s < 0.2 && l > 0.7) {
+    return {
+      finish: "ceramica",
+      profile: ceramicProfile,
+    };
+  }
+
+  return null;
 }
 
 export function guessMaterialFinish(
