@@ -9,9 +9,12 @@ import { ArrowLeft, FileText } from "lucide-react";
 import { AdminProjectInfoForm } from "@/components/forms/admin-project-info-form";
 import { ProjectBimMaterialsEditor } from "@/components/admin/project-bim-materials-editor";
 import { ProjectBimUploader } from "@/components/admin/project-bim-uploader";
+import { ProjectCategoryProgressEditor } from "@/components/admin/project-category-progress-editor";
+import { ProjectMediaDeleteButton } from "@/components/admin/project-media-delete-button";
 import { ProjectMediaUploader } from "@/components/admin/project-media-uploader";
 import { ProjectProgressChartTypeSelector } from "@/components/admin/project-progress-chart-type-selector";
 import { ProjectProgressEditor } from "@/components/admin/project-progress-editor";
+import { ProjectProgressSourceSelector } from "@/components/admin/project-progress-source-selector";
 import { ProjectStatusForm } from "@/components/admin/project-status-form";
 import { ProjectTitleSlugForm } from "@/components/admin/project-title-slug-form";
 import { requireAdminSession } from "@/lib/auth/session";
@@ -145,6 +148,15 @@ export default async function AdminProjectPage({
                       rel="noreferrer"
                       target="_blank"
                     >
+                      <ProjectMediaDeleteButton
+                        mediaId={item.id}
+                        mediaTitle={
+                          item.title ??
+                          "este archivo"
+                        }
+                        projectId={project._id.toString()}
+                      />
+
                       {isImage ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -188,6 +200,7 @@ export default async function AdminProjectPage({
               </div>
 
               <ProjectBimUploader
+                hasIfc={project.hasIfc}
                 projectId={project._id.toString()}
                 projectSlug={project.slug}
               />
@@ -202,6 +215,21 @@ export default async function AdminProjectPage({
                 overrides={
                   project.bimModel
                     .materialOverrides
+                }
+                projectId={project._id.toString()}
+              />
+            ) : null}
+
+            {project.bimModel &&
+            (project.bimModel.categories?.length ?? 0) >
+              0 ? (
+              <ProjectCategoryProgressEditor
+                categories={
+                  project.bimModel.categories ?? []
+                }
+                progress={
+                  project.bimModel
+                    .categoryProgress ?? {}
                 }
                 projectId={project._id.toString()}
               />
@@ -222,10 +250,25 @@ export default async function AdminProjectPage({
               />
             </div>
 
-            <p className="mt-3 text-sm text-white/55">
-              Cargá el porcentaje de avance por
-              etapa. Esto se muestra públicamente
-              en la página del modelo.
+            <div className="mt-4">
+              <ProjectProgressSourceSelector
+                currentSource={
+                  project.progressSource ?? "manual"
+                }
+                hasCategories={Boolean(
+                  project.bimModel &&
+                    (project.bimModel.categories
+                      ?.length ?? 0) > 0,
+                )}
+                projectId={project._id.toString()}
+              />
+            </div>
+
+            <p className="mt-4 text-sm text-white/55">
+              {project.progressSource ===
+              "bim-categorias"
+                ? "El gráfico público se calcula automáticamente a partir del avance cargado por categoría, arriba en Contenido BIM."
+                : "Cargá el porcentaje de avance por etapa. Esto se muestra públicamente en la página del modelo."}
             </p>
 
             <ProjectProgressEditor

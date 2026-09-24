@@ -14,6 +14,7 @@ type ProgressEntry = {
 type ConstructionProgressChartProps = {
   entries: readonly ProgressEntry[];
   chartType: ProgressChartType;
+  groupLabel?: string;
 };
 
 function Donut({
@@ -64,6 +65,7 @@ function Donut({
 export function ConstructionProgressChart({
   entries,
   chartType,
+  groupLabel = "etapa",
 }: ConstructionProgressChartProps) {
   const overallActual = Math.round(
     entries.reduce(
@@ -97,7 +99,8 @@ export function ConstructionProgressChart({
             </p>
 
             <p className="mt-0.5 text-[0.58rem] uppercase tracking-[0.13em] text-white/40">
-              Obra realizada y pago correspondiente por etapa
+              Obra realizada y pago correspondiente por{" "}
+              {groupLabel}
             </p>
           </div>
         </div>

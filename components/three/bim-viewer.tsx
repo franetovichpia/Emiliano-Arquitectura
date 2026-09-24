@@ -16,6 +16,7 @@ import type {
   SimpleScene,
 } from "@thatopen/components";
 import type { Box3 } from "three";
+import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowDown,
   ArrowLeft,
@@ -1497,9 +1498,56 @@ export function BimViewer({
       tabIndex={0}
     >
       <div
-        className="absolute inset-0 [&_canvas]:h-full [&_canvas]:w-full [&_canvas]:outline-none"
+        className={cn(
+          "absolute inset-0 transition-opacity duration-700 ease-out [&_canvas]:h-full [&_canvas]:w-full [&_canvas]:outline-none",
+          status === "loaded"
+            ? "opacity-100"
+            : "opacity-0",
+        )}
         ref={viewerContainerRef}
       />
+
+      <AnimatePresence>
+        {isBusy ? (
+          <motion.div
+            animate={{ opacity: 1 }}
+            className="pointer-events-none absolute inset-0 z-[2] grid place-items-center bg-[#071d31]"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div
+              animate={{
+                opacity: 1,
+                scale: 1,
+              }}
+              className="flex flex-col items-center gap-4"
+              initial={{
+                opacity: 0,
+                scale: 0.92,
+              }}
+              transition={{ duration: 0.4 }}
+            >
+              <div className="relative grid size-16 place-items-center">
+                <span className="absolute inset-0 animate-spin rounded-full border-2 border-white/10 border-t-[#d17c5b]" />
+
+                <Boxes
+                  aria-hidden="true"
+                  className="text-[#d17c5b]"
+                  size={22}
+                  strokeWidth={1.5}
+                />
+              </div>
+
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/60">
+                {status === "loading"
+                  ? `Cargando modelo · ${progress}%`
+                  : "Preparando visor"}
+              </p>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
       <div
         aria-hidden="true"

@@ -6,6 +6,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Boxes,
+  LineChart,
   X,
 } from "lucide-react";
 import {
@@ -38,9 +39,13 @@ export function ProjectDetailsModal({
   const [activeImageIndex, setActiveImageIndex] =
     useState(0);
 
-  useEffect(() => {
+  const [renderedProject, setRenderedProject] =
+    useState(project);
+
+  if (project !== renderedProject) {
+    setRenderedProject(project);
     setActiveImageIndex(0);
-  }, [project]);
+  }
 
   useEffect(() => {
     if (!project) {
@@ -179,20 +184,29 @@ export function ProjectDetailsModal({
 
             <div className="grid grid-cols-1 lg:grid-cols-12">
               <div className="relative min-h-64 overflow-hidden bg-blueprint-deep lg:col-span-7 lg:min-h-[38rem]">
-                {project.images[
-                  activeImageIndex
-                ] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    alt={project.title}
-                    className="absolute inset-0 size-full object-cover"
-                    src={
-                      project.images[
-                        activeImageIndex
-                      ]
-                    }
-                  />
-                ) : null}
+                <AnimatePresence mode="popLayout">
+                  {project.images[
+                    activeImageIndex
+                  ] ? (
+                    <motion.img
+                      alt={project.title}
+                      animate={{ opacity: 1 }}
+                      className="absolute inset-0 size-full object-cover"
+                      exit={{ opacity: 0 }}
+                      initial={{ opacity: 0 }}
+                      key={activeImageIndex}
+                      src={
+                        project.images[
+                          activeImageIndex
+                        ]
+                      }
+                      transition={{
+                        duration: 0.35,
+                        ease: [0.22, 1, 0.36, 1],
+                      }}
+                    />
+                  ) : null}
+                </AnimatePresence>
 
                 <div
                   aria-hidden="true"
@@ -322,6 +336,21 @@ export function ProjectDetailsModal({
                       />
 
                       Ver modelo 3D
+                    </Link>
+                  ) : null}
+
+                  {project.bimSlug && project.has5D ? (
+                    <Link
+                      className="group inline-flex min-h-11 items-center gap-3 rounded-full border border-sage/40 bg-sage/15 px-5 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-forest-deep transition hover:-translate-y-0.5 hover:bg-sage/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-4"
+                      href={`/modelos/${project.bimSlug}#avance-obra`}
+                    >
+                      <LineChart
+                        aria-hidden="true"
+                        size={15}
+                        strokeWidth={1.5}
+                      />
+
+                      Ver avance 5D
                     </Link>
                   ) : null}
 

@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+
 import { Reveal } from "@/components/motion/reveal";
 import { AstrocasasWall } from "@/components/projects/astrocasas-wall";
 import { Container } from "@/app/container";
@@ -63,6 +66,20 @@ export async function AstrocasasSection() {
                 cada casa dialoga con quien la
                 habita.
               </p>
+
+              <Link
+                className="group mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-ink/15 bg-white/40 px-5 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-ink transition duration-300 hover:-translate-y-0.5 hover:bg-white/70"
+                href="/proyectos?categoria=astrocasas"
+              >
+                Ver todas las Astrocasas
+
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  size={15}
+                  strokeWidth={1.5}
+                />
+              </Link>
             </div>
           </Reveal>
         </div>

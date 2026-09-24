@@ -72,9 +72,34 @@ export default async function ModelViewerPage({
   const modelUrl = getPublicUrl("bim", storageKey);
   const modelSize = formatFileSize(bimModel.fileSizeBytes);
 
-  const progressEntries = await listConstructionProgress(
-    project._id.toString(),
-  );
+  const manualProgressEntries =
+    await listConstructionProgress(
+      project._id.toString(),
+    );
+
+  const categoryProgressEntries = Object.entries(
+    bimModel.categoryProgress ?? {},
+  ).map(([category, entry]) => ({
+    id: category,
+    stageName: category,
+    plannedPercentage: 100,
+    actualPercentage: entry.actualPercentage,
+    paidPercentage: entry.paidPercentage,
+  }));
+
+  const progressEntries =
+    project.progressSource === "bim-categorias"
+      ? categoryProgressEntries
+      : manualProgressEntries.map((entry) => ({
+          id: entry._id.toString(),
+          stageName: entry.stageName,
+          plannedPercentage:
+            entry.plannedPercentage,
+          actualPercentage:
+            entry.actualPercentage,
+          paidPercentage: entry.paidPercentage,
+          notes: entry.notes,
+        }));
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#071d31] text-[#f7f2e8]">
@@ -165,7 +190,10 @@ export default async function ModelViewerPage({
         </div>
 
         {progressEntries.length > 0 ? (
-          <div className="mt-8">
+          <div
+            className="mt-8 scroll-mt-28"
+            id="avance-obra"
+          >
             <div className="mb-3 flex justify-end">
               <ExportProgressPdfButton
                 entries={progressEntries.map(
@@ -185,17 +213,13 @@ export default async function ModelViewerPage({
 
             <ConstructionProgressChart
               chartType={project.progressChartType}
-              entries={progressEntries.map((entry) => ({
-                id: entry._id.toString(),
-                stageName: entry.stageName,
-                plannedPercentage:
-                  entry.plannedPercentage,
-                actualPercentage:
-                  entry.actualPercentage,
-                paidPercentage:
-                  entry.paidPercentage,
-                notes: entry.notes,
-              }))}
+              entries={progressEntries}
+              groupLabel={
+                project.progressSource ===
+                "bim-categorias"
+                  ? "categoría"
+                  : "etapa"
+              }
             />
           </div>
         ) : null}

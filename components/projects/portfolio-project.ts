@@ -13,6 +13,7 @@ export type PortfolioProject = {
   images: string[];
   externalLink?: string;
   bimSlug?: string;
+  has5D?: boolean;
   zodiacSign?: string;
   tools: readonly string[];
   facts: readonly PortfolioProjectFact[];

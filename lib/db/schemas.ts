@@ -69,6 +69,14 @@ export const projectMediaSchema = z.object({
 });
 export type ProjectMedia = z.infer<typeof projectMediaSchema>;
 
+export const categoryProgressEntrySchema = z.object({
+  actualPercentage: z.number().min(0).max(100).default(0),
+  paidPercentage: z.number().min(0).max(100).default(0),
+});
+export type CategoryProgressEntry = z.infer<
+  typeof categoryProgressEntrySchema
+>;
+
 export const bimModelSchema = z.object({
   format: bimModelFormatSchema,
   ifcSchema: z.string().optional(),
@@ -79,6 +87,10 @@ export const bimModelSchema = z.object({
   materials: z.array(bimMaterialInfoSchema).default([]),
   materialOverrides: z
     .record(z.string(), materialFinishSchema)
+    .default({}),
+  categories: z.array(z.string()).default([]),
+  categoryProgress: z
+    .record(z.string(), categoryProgressEntrySchema)
     .default({}),
   processedAt: z.date().optional(),
   errorMessage: z.string().optional(),
@@ -92,6 +104,14 @@ export const progressChartTypeSchema = z.enum([
 ]);
 export type ProgressChartType = z.infer<
   typeof progressChartTypeSchema
+>;
+
+export const progressSourceSchema = z.enum([
+  "manual",
+  "bim-categorias",
+]);
+export type ProgressSource = z.infer<
+  typeof progressSourceSchema
 >;
 
 export const projectSchema = z.object({
@@ -115,6 +135,7 @@ export const projectSchema = z.object({
   bimModel: bimModelSchema.optional(),
   progressChartType:
     progressChartTypeSchema.default("barra"),
+  progressSource: progressSourceSchema.default("manual"),
   sortOrder: z.number().default(0),
   publishedAt: z.date().optional(),
   createdAt: z.date(),
@@ -171,4 +192,5 @@ export const adminUserSchema = z.object({
   role: z.enum(["admin", "editor"]).default("admin"),
   createdAt: z.date(),
 });
-export type AdminUser = z.infer<typeof adminUserSchema>;
+export type AdminUser = z.infer<typeof 
+adminUserSchema>;

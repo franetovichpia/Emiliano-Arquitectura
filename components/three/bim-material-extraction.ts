@@ -2,6 +2,7 @@ import type { BimMaterialInfo, MaterialFinish } from "@/lib/db/schemas";
 import type { BimModelFormat } from "@/data/bim-projects";
 import type { FinishableMaterial } from "@/components/three/bim-visual-style";
 import { guessMaterialFinish } from "@/components/three/bim-visual-style";
+import { humanizeIfcCategory } from "@/components/three/bim-category-labels";
 
 /**
  * Loads an IFC/fragments buffer headlessly (no renderer, no scene) purely to
@@ -99,4 +100,77 @@ export async function extractMaterialsFromModel(
   }
 
   return Array.from(found.values());
+}
+
+/**
+ * Loads an IFC/fragments buffer headlessly, igual que
+ * extractMaterialsFromModel, pero para enumerar las categorías
+ * IFC con geometría propia (muros, pisos, ventanas, etc.), así
+ * el admin puede cargar avance por categoría sin volver a abrir
+ * el visor 3D.
+ */
+export async function extractCategoriesFromModel(
+  buffer: Uint8Array,
+  modelFormat: BimModelFormat,
+): Promise<string[]> {
+  const OBC = await import("@thatopen/components");
+
+  const components = new OBC.Components();
+  components.init();
+
+  const fragments = components.get(OBC.FragmentsManager);
+  fragments.init("/workers/fragments-worker.mjs");
+
+  const modelId = `extraction-${Date.now()}`;
+  const categories = new Set<string>();
+
+  try {
+    let loadedModel;
+
+    if (modelFormat === "ifc") {
+      const ifcLoader = components.get(OBC.IfcLoader);
+
+      await ifcLoader.setup({
+        autoSetWasm: false,
+        wasm: {
+          path: "/wasm/",
+          absolute: true,
+        },
+      });
+
+      loadedModel = await ifcLoader.load(
+        buffer,
+        false,
+        modelId,
+      );
+    } else {
+      loadedModel = await fragments.core.load(buffer, {
+        modelId,
+      });
+    }
+
+    await fragments.core.update(true);
+
+    if (loadedModel) {
+      const modelItemIds =
+        await loadedModel.getItemsIdsWithGeometry();
+
+      const geometryCategories =
+        modelItemIds.length > 0
+          ? await loadedModel.getItemsWithGeometryCategories()
+          : [];
+
+      geometryCategories.forEach((rawCategory) => {
+        if (!rawCategory) {
+          return;
+        }
+
+        categories.add(humanizeIfcCategory(rawCategory));
+      });
+    }
+  } finally {
+    components.dispose();
+  }
+
+  return Array.from(categories).sort();
 }

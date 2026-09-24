@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+
 import { Reveal } from "@/components/motion/reveal";
 import { ProjectCarousel } from "@/components/projects/project-carousel";
 import { Container } from "@/app/container";
@@ -62,6 +65,20 @@ export async function ProfessionalProjectsSection() {
                 Selección de trabajos de arquitectura,
                 representación y procesos BIM.
               </p>
+
+              <Link
+                className="group mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/20 px-5 text-[0.6rem] font-semibold uppercase tracking-[0.14em] text-ivory transition duration-300 hover:-translate-y-0.5 hover:bg-white/10"
+                href="/proyectos?categoria=portfolio-general,nuevos-proyectos"
+              >
+                Ver todos los proyectos profesionales
+
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  size={15}
+                  strokeWidth={1.5}
+                />
+              </Link>
             </div>
           </Reveal>
         </div>

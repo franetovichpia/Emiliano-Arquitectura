@@ -31,6 +31,7 @@ const zodiacLabels: Record<string, string> = {
 export function toPortfolioProject(
   project: WithId<Project>,
   index: number,
+  has5D = false,
 ): PortfolioProject {
   const images = project.media
     .filter(
@@ -99,6 +100,7 @@ export function toPortfolioProject(
     bimSlug: project.hasIfc
       ? project.slug
       : undefined,
+    has5D,
     zodiacSign: zodiacLabel,
     tools: project.tools ?? [],
     facts,

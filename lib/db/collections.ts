@@ -10,11 +10,13 @@ import type {
   BimConstructionProgress,
   BimMaterialInfo,
   BimModelFormatValue,
+  CategoryProgressEntry,
   MaterialFinish,
   Project,
   ProjectCategory,
   ProjectMedia,
   ProgressChartType,
+  ProgressSource,
   ProjectStatus,
   ZodiacSign,
 } from "@/lib/db/schemas";
@@ -286,6 +288,7 @@ export async function createProject(
     tools: [],
     media: [],
     progressChartType: "barra",
+    progressSource: "manual",
     sortOrder: 0,
     createdAt: now,
     updatedAt: now,
@@ -402,6 +405,7 @@ type SetProjectBimModelInput = {
   ifcStorageKey: string;
   fileSizeBytes?: number;
   materials: BimMaterialInfo[];
+  categories: string[];
 };
 
 export async function setProjectBimModel(
@@ -425,10 +429,44 @@ export async function setProjectBimModel(
           fileSizeBytes: input.fileSizeBytes,
           materials: input.materials,
           materialOverrides: {},
+          categories: input.categories,
+          categoryProgress: {},
           processedAt: now,
           updatedAt: now,
         },
       },
+    },
+  );
+}
+
+export async function removeProjectBimModel(
+  id: string,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        hasIfc: false,
+        updatedAt: new Date(),
+      },
+      $unset: { bimModel: "" },
+    },
+  );
+}
+
+export async function removeProjectMedia(
+  id: string,
+  mediaId: string,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $pull: { media: { id: mediaId } },
+      $set: { updatedAt: new Date() },
     },
   );
 }
@@ -445,6 +483,44 @@ export async function updateProjectMaterialOverrides(
       $set: {
         "bimModel.materialOverrides": overrides,
         "bimModel.updatedAt": new Date(),
+        updatedAt: new Date(),
+      },
+    },
+  );
+}
+
+export async function updateProjectCategoryProgress(
+  id: string,
+  categoryProgress: Record<
+    string,
+    CategoryProgressEntry
+  >,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        "bimModel.categoryProgress": categoryProgress,
+        "bimModel.updatedAt": new Date(),
+        updatedAt: new Date(),
+      },
+    },
+  );
+}
+
+export async function setProjectProgressSource(
+  id: string,
+  source: ProgressSource,
+): Promise<void> {
+  const projects = await getProjectsCollection();
+
+  await projects.updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        progressSource: source,
         updatedAt: new Date(),
       },
     },

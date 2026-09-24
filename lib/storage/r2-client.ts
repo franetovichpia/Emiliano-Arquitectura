@@ -1,4 +1,7 @@
-import { S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
 const accountId = process.env.R2_ACCOUNT_ID;
 const accessKeyId = process.env.R2_ACCESS_KEY_ID;
@@ -42,4 +45,16 @@ export function getPublicUrl(
   }
 
   return `${base.replace(/\/$/, "")}/${key}`;
+}
+
+export async function deleteObject(
+  bucketKind: keyof typeof r2Buckets,
+  key: string,
+) {
+  await r2Client.send(
+    new DeleteObjectCommand({
+      Bucket: r2Buckets[bucketKind],
+      Key: key,
+    }),
+  );
 }

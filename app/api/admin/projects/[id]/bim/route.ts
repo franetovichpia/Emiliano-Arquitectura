@@ -2,11 +2,16 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
-import { setProjectBimModel } from "@/lib/db/collections";
+import {
+  getAdminProjectById,
+  removeProjectBimModel,
+  setProjectBimModel,
+} from "@/lib/db/collections";
 import {
   bimModelFormatSchema,
   materialFinishSchema,
 } from "@/lib/db/schemas";
+import { deleteObject } from "@/lib/storage/r2-client";
 
 const saveBimModelSchema = z.object({
   format: bimModelFormatSchema,
@@ -24,6 +29,7 @@ const saveBimModelSchema = z.object({
       }),
     )
     .default([]),
+  categories: z.array(z.string()).default([]),
 });
 
 type RouteContext = {
@@ -57,6 +63,41 @@ export async function POST(
   }
 
   await setProjectBimModel(id, body.data);
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: RouteContext,
+) {
+  const session = await requireAdminSession();
+
+  if (!session) {
+    return NextResponse.json(
+      { error: "No autorizado." },
+      { status: 401 },
+    );
+  }
+
+  const { id } = await params;
+  const project = await getAdminProjectById(id);
+
+  const storageKey =
+    project?.bimModel?.ifcStorageKey ??
+    project?.bimModel?.fragStorageKey;
+
+  if (storageKey) {
+    try {
+      await deleteObject("bim", storageKey);
+    } catch {
+      // El registro en la base es la fuente de
+      // verdad; si el borrado en R2 falla igual
+      // sacamos el modelo del proyecto.
+    }
+  }
+
+  await removeProjectBimModel(id);
 
   return NextResponse.json({ ok: true });
 }
