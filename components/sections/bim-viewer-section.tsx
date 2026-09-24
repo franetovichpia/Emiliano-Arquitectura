@@ -90,7 +90,7 @@ export function BimViewerSection() {
               <Link
                 aria-label="Explorar todos los proyectos con dimensión 3D"
                 className="group/link inline-flex min-h-12 shrink-0 items-center gap-3 rounded-full bg-terracotta px-7 py-3.5 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-ivory transition duration-300 hover:-translate-y-0.5 hover:bg-terracotta/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-4 focus-visible:ring-offset-blueprint-deep"
-                href="/proyectos"
+                href="/proyectos?bim=1"
               >
                 Explorar Dimensión 3D
 

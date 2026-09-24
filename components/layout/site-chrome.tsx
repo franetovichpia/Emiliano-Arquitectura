@@ -23,12 +23,12 @@ export function SiteChrome({
 
       <AnimatePresence mode="wait">
         <motion.div
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          initial={{ opacity: 0 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0.6, y: -4 }}
+          initial={{ opacity: 0.6, y: 4 }}
           key={pathname}
           transition={{
-            duration: 0.28,
+            duration: 0.22,
             ease: [0.22, 1, 0.36, 1],
           }}
         >

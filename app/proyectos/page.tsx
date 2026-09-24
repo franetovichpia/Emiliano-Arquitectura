@@ -17,13 +17,18 @@ export const metadata: Metadata = {
 };
 
 type AllProjectsPageProps = {
-  searchParams: Promise<{ categoria?: string }>;
+  searchParams: Promise<{
+    categoria?: string;
+    bim?: string;
+  }>;
 };
 
 export default async function AllProjectsPage({
   searchParams,
 }: AllProjectsPageProps) {
-  const { categoria } = await searchParams;
+  const { categoria, bim } = await searchParams;
+
+  const onlyBim = bim === "1";
 
   const categorySlugs = categoria
     ? categoria
@@ -32,7 +37,7 @@ export default async function AllProjectsPage({
         .filter(Boolean)
     : [];
 
-  const projects =
+  const rawProjects =
     categorySlugs.length > 0
       ? (
           await Promise.all(
@@ -42,6 +47,12 @@ export default async function AllProjectsPage({
           )
         ).flat()
       : await listPublicProjects();
+
+  const projects = onlyBim
+    ? rawProjects.filter(
+        (project) => project.hasIfc,
+      )
+    : rawProjects;
 
   const progressEntries = await Promise.all(
     projects.map((project) =>
@@ -68,17 +79,21 @@ export default async function AllProjectsPage({
     categorySlugs.length > 0 &&
     categorySlugs.includes("portfolio-general");
 
-  const eyebrow = isAstrocasasOnly
-    ? "Astrocasas"
-    : isProfessionalOnly
-      ? "Proyectos profesionales"
-      : "Portfolio completo";
+  const eyebrow = onlyBim
+    ? "Visualización arquitectónica"
+    : isAstrocasasOnly
+      ? "Astrocasas"
+      : isProfessionalOnly
+        ? "Proyectos profesionales"
+        : "Portfolio completo";
 
-  const heading = isAstrocasasOnly
-    ? "Astrocasas"
-    : isProfessionalOnly
-      ? "Proyectos profesionales"
-      : "Todos los proyectos";
+  const heading = onlyBim
+    ? "Dimensión 3D"
+    : isAstrocasasOnly
+      ? "Astrocasas"
+      : isProfessionalOnly
+        ? "Proyectos profesionales"
+        : "Todos los proyectos";
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#071d31] text-[#f7f2e8]">

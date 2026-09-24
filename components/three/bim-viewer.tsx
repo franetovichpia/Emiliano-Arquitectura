@@ -15,7 +15,7 @@ import type {
   SimpleRenderer,
   SimpleScene,
 } from "@thatopen/components";
-import type { Box3 } from "three";
+import type { Box3, Vector3 } from "three";
 import { AnimatePresence, motion } from "motion/react";
 import {
   ArrowDown,
@@ -425,7 +425,9 @@ export function BimViewer({
       camera.three.near = 0.05;
       camera.three.updateProjectionMatrix();
 
-      const configureOrbitControls = () => {
+      const configureOrbitControls = (
+        smoothTime = 0.18,
+      ) => {
         activeCameraMode = "orbit";
 
         camera.controls.stop();
@@ -444,7 +446,7 @@ export function BimViewer({
         camera.controls.truckSpeed = 2;
         camera.controls.dollySpeed = 1;
 
-        camera.controls.smoothTime = 0.18;
+        camera.controls.smoothTime = smoothTime;
         camera.controls.draggingSmoothTime =
           0.08;
 
@@ -531,11 +533,23 @@ export function BimViewer({
         | Box3
         | null = null;
 
+      let plannedEntranceFlight: {
+        from: {
+          position: Vector3;
+          target: Vector3;
+        };
+        to: {
+          position: Vector3;
+          target: Vector3;
+        };
+      } | null = null;
+
       const frameModel = async (
         modelBox: Box3,
         smooth: boolean,
+        smoothTime = 0.18,
       ) => {
-        configureOrbitControls();
+        configureOrbitControls(smoothTime);
 
         const center =
           modelBox.getCenter(
@@ -576,6 +590,184 @@ export function BimViewer({
           smooth,
         );
 
+        await fragments.core.update(true);
+      };
+
+      /*
+       * Encuadre inicial "lejano": deja la cámara bien
+       * atrás del modelo, sin ajustar todavía. Se usa
+       * mientras el visor sigue tapado por la pantalla
+       * de carga, para que la primera vez que el usuario
+       * ve el modelo sea con la cámara acercándose
+       * (frameModel con smooth=true), no ya encuadrado
+       * de golpe.
+       */
+      const setEstablishingShot = (
+        modelBox: Box3,
+      ) => {
+        const center =
+          modelBox.getCenter(
+            new THREE.Vector3(),
+          );
+
+        const size =
+          modelBox.getSize(
+            new THREE.Vector3(),
+          );
+
+        const horizontalSize = Math.max(
+          size.x,
+          size.z,
+          1,
+        );
+
+        const cameraDistance =
+          Math.max(
+            horizontalSize,
+            size.y * 3,
+            10,
+          ) * 2.4;
+
+        const position = new THREE.Vector3(
+          center.x + cameraDistance * 0.72,
+          center.y + cameraDistance * 0.82,
+          center.z + cameraDistance * 0.72,
+        );
+
+        camera.controls.setLookAt(
+          position.x,
+          position.y,
+          position.z,
+          center.x,
+          center.y,
+          center.z,
+          false,
+        );
+
+        return { position, target: center };
+      };
+
+      /*
+       * Acercamiento inicial cuadro a cuadro: la
+       * transición "suave" propia de camera-controls
+       * (setLookAt con enableTransition) puede quedar
+       * colgada cuando el salto entre el encuadre lejano
+       * y el final es muy grande, así que interpolamos
+       * la posición y el objetivo nosotros mismos con
+       * requestAnimationFrame y aplicamos cada paso de
+       * forma instantánea (sin transición interna).
+       *
+       * `toPosition`/`toTarget` se calculan ANTES de
+       * mover la cámara al encuadre lejano (ver más abajo,
+       * justo después de definir esta función) — llamar a
+       * fitToBox con la cámara ya lejos y en un ángulo
+       * arbitrario le hace perder la dirección de vista y
+       * termina encuadrando mal.
+       */
+      const flyToModel = async (
+        fromPosition: Vector3,
+        fromTarget: Vector3,
+        toPosition: Vector3,
+        toTarget: Vector3,
+        durationMs = 1100,
+      ) => {
+        camera.controls.setLookAt(
+          fromPosition.x,
+          fromPosition.y,
+          fromPosition.z,
+          fromTarget.x,
+          fromTarget.y,
+          fromTarget.z,
+          false,
+        );
+
+        const start =
+          typeof performance !== "undefined"
+            ? performance.now()
+            : Date.now();
+
+        const nextFrame = () =>
+          new Promise<void>((resolve) => {
+            window.requestAnimationFrame(() => {
+              resolve();
+            });
+          });
+
+        let t = 0;
+
+        /*
+         * `camera.controls.setLookAt(...)` (instantáneo)
+         * recién se aplica a `camera.three.position`
+         * después de que pasa un frame — por eso, en
+         * cada paso, esperamos un frame ANTES de forzar
+         * el render, y renderizamos llamando al
+         * renderer directamente (no fragments.core.update,
+         * que puede no disparar un render nuevo si no
+         * detecta un cambio "oficial" de cámara).
+         */
+        while (t < 1 && !disposed) {
+          const now =
+            typeof performance !== "undefined"
+              ? performance.now()
+              : Date.now();
+
+          t = Math.min(
+            (now - start) / durationMs,
+            1,
+          );
+
+          const eased =
+            1 - Math.pow(1 - t, 3);
+
+          camera.controls.setLookAt(
+            fromPosition.x +
+              (toPosition.x -
+                fromPosition.x) *
+                eased,
+            fromPosition.y +
+              (toPosition.y -
+                fromPosition.y) *
+                eased,
+            fromPosition.z +
+              (toPosition.z -
+                fromPosition.z) *
+                eased,
+            fromTarget.x +
+              (toTarget.x -
+                fromTarget.x) *
+                eased,
+            fromTarget.y +
+              (toTarget.y -
+                fromTarget.y) *
+                eased,
+            fromTarget.z +
+              (toTarget.z -
+                fromTarget.z) *
+                eased,
+            false,
+          );
+
+          await nextFrame();
+
+          if (disposed) {
+            return;
+          }
+
+          renderer.update();
+          void fragments.core.update();
+        }
+
+        if (disposed) {
+          return;
+        }
+
+        await nextFrame();
+
+        if (disposed) {
+          return;
+        }
+
+        renderer.update();
         await fragments.core.update(true);
       };
 
@@ -1152,10 +1344,44 @@ export function BimViewer({
             return true;
           };
 
-        await frameModel(
-          latestModelBox,
-          false,
-        );
+        /*
+         * Calculamos el encuadre final ANTES de mover la
+         * cámara al plano "lejano": fitToBox pierde el
+         * ángulo de vista si se lo llama con la cámara ya
+         * posicionada lejos y en diagonal, así que hay que
+         * calcularlo mientras la cámara sigue en su posición
+         * natural (recién inicializada).
+         */
+        await frameModel(latestModelBox, false);
+
+        await new Promise<void>((resolve) => {
+          window.requestAnimationFrame(() => {
+            resolve();
+          });
+        });
+
+        if (disposed) {
+          return;
+        }
+
+        const framedPosition =
+          camera.three.position.clone();
+
+        const framedTarget =
+          camera.controls.getTarget(
+            new THREE.Vector3(),
+          );
+
+        const establishing =
+          setEstablishingShot(latestModelBox);
+
+        plannedEntranceFlight = {
+          from: establishing,
+          to: {
+            position: framedPosition,
+            target: framedTarget,
+          },
+        };
       }
 
       const updateFragments = () => {
@@ -1183,6 +1409,33 @@ export function BimViewer({
       setProgress(100);
       setStage("Modelo cargado");
       setStatus("loaded");
+
+      /*
+       * Recién acá se revela el visor (el canvas
+       * pasa de opacity-0 a opacity-100), mostrando
+       * primero el encuadre lejano. Le damos un
+       * respiro breve para que se note ese punto de
+       * partida antes de empezar a acercarse — si el
+       * acercamiento arranca de inmediato, termina
+       * antes de que el fundido del canvas siquiera
+       * se note.
+       */
+      if (plannedEntranceFlight && !disposed) {
+        await new Promise((resolve) => {
+          window.setTimeout(resolve, 350);
+        });
+
+        if (disposed) {
+          return;
+        }
+
+        await flyToModel(
+          plannedEntranceFlight.from.position,
+          plannedEntranceFlight.from.target,
+          plannedEntranceFlight.to.position,
+          plannedEntranceFlight.to.target,
+        );
+      }
     };
 
     initializeViewer()

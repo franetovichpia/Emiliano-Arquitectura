@@ -111,23 +111,52 @@ export function ProjectCarousel({ projects }: ProjectCarouselProps) {
     }
   };
 
-  const wheelLock = useRef(false);
+  const wheelAccumulated = useRef(0);
+  const wheelDebounceTimeout = useRef<
+    number | null
+  >(null);
 
+  /*
+   * Un mouse wheel o trackpad manda una ráfaga de
+   * eventos por cada gesto de scroll, con inercia al
+   * final que a veces trae el signo invertido. Reaccionar
+   * a cada evento individual hacía que un scroll rápido
+   * "rebotara" hacia atrás justo cuando terminaba la
+   * inercia. Acumulamos el delta de toda la ráfaga y
+   * decidimos la dirección una sola vez, cuando el
+   * usuario deja de scrollear.
+   */
   const handleWheel = (
     event: React.WheelEvent<HTMLDivElement>,
   ) => {
     event.preventDefault();
 
-    if (wheelLock.current) {
-      return;
+    wheelAccumulated.current +=
+      event.deltaY + event.deltaX;
+
+    if (wheelDebounceTimeout.current !== null) {
+      window.clearTimeout(
+        wheelDebounceTimeout.current,
+      );
     }
 
-    wheelLock.current = true;
-    goTo(currentIndex + (event.deltaY > 0 || event.deltaX > 0 ? 1 : -1));
+    wheelDebounceTimeout.current =
+      window.setTimeout(() => {
+        const accumulated =
+          wheelAccumulated.current;
 
-    window.setTimeout(() => {
-      wheelLock.current = false;
-    }, 420);
+        wheelAccumulated.current = 0;
+        wheelDebounceTimeout.current = null;
+
+        if (Math.abs(accumulated) < 12) {
+          return;
+        }
+
+        goTo(
+          currentIndex +
+            (accumulated > 0 ? 1 : -1),
+        );
+      }, 120);
   };
 
   const handleKeyDown = (
