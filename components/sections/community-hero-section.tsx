@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import {
   ArrowDown,
   ArrowLeft,
@@ -77,7 +77,7 @@ export function CommunityHeroSection() {
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 className="group inline-flex min-h-11 items-center gap-3 rounded-full border border-terracotta/40 bg-terracotta px-5 py-3 text-[0.62rem] font-semibold uppercase tracking-[0.15em] text-ink transition duration-300 hover:-translate-y-0.5 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                href="#proyectos"
+                href="#proyectos-integrativos"
               >
                 Conocer los proyectos
 

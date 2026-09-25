@@ -1,6 +1,5 @@
-import Link from "next/link";
+import { Link } from "next-view-transitions";
 import {
-  ArrowUp,
   ArrowUpRight,
   PanelsTopLeft,
 } from "lucide-react";
@@ -10,6 +9,7 @@ import {
 } from "react-icons/fa";
 
 import { Container } from "@/app/container";
+import { ScrollToTopButton } from "@/components/ui/scroll-to-top-button";
 import {
   footerNavigation,
   mainNavigation,
@@ -76,7 +76,7 @@ export function SiteFooter() {
               <Link
                 aria-label="Volver al inicio"
                 className="group inline-flex items-center gap-4 rounded-xl"
-                href="#inicio"
+                href="/#inicio"
               >
                 <span className="grid size-14 place-items-center rounded-2xl border border-white/15 bg-white/[0.06] font-serif text-xl text-paper transition-colors duration-300 group-hover:border-terracotta/40 group-hover:text-terracotta">
                   EGR
@@ -208,19 +208,7 @@ export function SiteFooter() {
                 ))}
               </div>
 
-              <Link
-                aria-label="Volver al inicio de la página"
-                className="glass-interactive mt-8 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/[0.05] px-5 py-3 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-ivory/55 hover:border-sage/35 hover:text-sage"
-                href="#inicio"
-              >
-                Volver arriba
-
-                <ArrowUp
-                  aria-hidden="true"
-                  size={14}
-                  strokeWidth={1.6}
-                />
-              </Link>
+              <ScrollToTopButton className="glass-interactive mt-8 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/[0.05] px-5 py-3 text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-ivory/55 hover:border-sage/35 hover:text-sage" />
             </div>
           </div>
 

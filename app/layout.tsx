@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Montserrat } from "next/font/google";
+import { ViewTransitions } from "next-view-transitions";
 
 import { SiteChrome } from "@/components/layout/site-chrome";
 
@@ -49,15 +50,17 @@ export default function RootLayout({
   children,
 }: RootLayoutProps) {
   return (
-    <html
-      data-scroll-behavior="smooth"
-      lang="es"
-    >
-      <body
-        className={`${montserrat.variable} ${boska.variable} bg-paper font-sans text-ink antialiased`}
+    <ViewTransitions>
+      <html
+        data-scroll-behavior="smooth"
+        lang="es"
       >
-        <SiteChrome>{children}</SiteChrome>
-      </body>
-    </html>
+        <body
+          className={`${montserrat.variable} ${boska.variable} bg-paper font-sans text-ink antialiased`}
+        >
+          <SiteChrome>{children}</SiteChrome>
+        </body>
+      </html>
+    </ViewTransitions>
   );
 }
