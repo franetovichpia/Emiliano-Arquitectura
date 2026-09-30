@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { BarChart3 } from "lucide-react";
 
 import type { ProgressChartType } from "@/lib/db/schemas";
@@ -16,6 +19,15 @@ type ConstructionProgressChartProps = {
   chartType: ProgressChartType;
   groupLabel?: string;
 };
+
+const SEGMENT_COLORS = [
+  "#7fa88a",
+  "#d17c5b",
+  "#9dc3d5",
+  "#c9a36a",
+  "#a888c9",
+  "#8ac9b8",
+];
 
 function Donut({
   percentage,
@@ -67,6 +79,9 @@ export function ConstructionProgressChart({
   chartType,
   groupLabel = "etapa",
 }: ConstructionProgressChartProps) {
+  const [selectedId, setSelectedId] =
+    useState<string>("all");
+
   const overallActual = Math.round(
     entries.reduce(
       (total, entry) => total + entry.actualPercentage,
@@ -80,6 +95,19 @@ export function ConstructionProgressChart({
       0,
     ) / entries.length,
   );
+
+  const pluralGroupLabel =
+    groupLabel === "categoría" ? "categorías" : "etapas";
+
+  const visibleEntries =
+    selectedId === "all"
+      ? entries
+      : entries.filter(
+          (entry) => entry.id === selectedId,
+        );
+
+  const showOverview =
+    selectedId === "all" && entries.length > 1;
 
   return (
     <div className="rounded-[1.75rem] border border-white/15 bg-white/[0.04] p-6 backdrop-blur-xl sm:p-8">
@@ -99,7 +127,7 @@ export function ConstructionProgressChart({
             </p>
 
             <p className="mt-0.5 text-[0.58rem] uppercase tracking-[0.13em] text-white/40">
-              Obra realizada y pago correspondiente por{" "}
+              Obra realizada y avance financiero por{" "}
               {groupLabel}
             </p>
           </div>
@@ -117,7 +145,7 @@ export function ConstructionProgressChart({
 
           <Donut
             color="#d17c5b"
-            label="Pagado general"
+            label="Avance financiero general"
             percentage={overallPaid}
             size={24}
             thickness={7}
@@ -126,9 +154,92 @@ export function ConstructionProgressChart({
         </div>
       </div>
 
+      {entries.length > 1 ? (
+        <div className="mt-6 flex items-center gap-3">
+          <label
+            className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.13em] text-white/45"
+            htmlFor="progress-filter"
+          >
+            Ver
+          </label>
+
+          <select
+            className="min-h-9 rounded-full border border-white/15 bg-white/[0.06] px-4 text-[0.65rem] text-white/80 outline-none transition-colors focus-visible:border-[#d17c5b]/50"
+            id="progress-filter"
+            onChange={(event) =>
+              setSelectedId(event.target.value)
+            }
+            value={selectedId}
+          >
+            <option value="all">
+              Todas las {pluralGroupLabel}
+            </option>
+
+            {entries.map((entry) => (
+              <option key={entry.id} value={entry.id}>
+                {entry.stageName}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
+      {showOverview ? (
+        <div className="mt-6">
+          <p className="mb-2 text-[0.58rem] font-semibold uppercase tracking-[0.13em] text-white/45">
+            Avance de obra por {groupLabel} (proyecto completo)
+          </p>
+
+          <div className="flex h-8 w-full overflow-hidden rounded-full border border-white/10 bg-white/[0.03]">
+            {entries.map((entry, index) => (
+              <div
+                className="relative flex-1 border-r border-[#071d31] last:border-r-0"
+                key={entry.id}
+                title={`${entry.stageName}: ${entry.actualPercentage}%`}
+              >
+                <div
+                  className="absolute inset-y-0 left-0 transition-[width] duration-500"
+                  style={{
+                    width: `${Math.min(100, entry.actualPercentage)}%`,
+                    backgroundColor:
+                      SEGMENT_COLORS[
+                        index % SEGMENT_COLORS.length
+                      ],
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5">
+            {entries.map((entry, index) => (
+              <div
+                className="flex items-center gap-1.5"
+                key={entry.id}
+              >
+                <span
+                  className="size-2 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor:
+                      SEGMENT_COLORS[
+                        index % SEGMENT_COLORS.length
+                      ],
+                  }}
+                />
+
+                <span className="text-[0.6rem] text-white/50">
+                  {entry.stageName} ·{" "}
+                  {entry.actualPercentage}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {chartType === "torta" ? (
         <div className="mt-7 grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
-          {entries.map((entry) => (
+          {visibleEntries.map((entry) => (
             <div
               className="rounded-2xl border border-white/10 bg-white/[0.02] p-4"
               key={entry.id}
@@ -146,7 +257,7 @@ export function ConstructionProgressChart({
 
                 <Donut
                   color="#d17c5b"
-                  label="Pagado"
+                  label="Financiero"
                   percentage={entry.paidPercentage}
                 />
               </div>
@@ -161,7 +272,7 @@ export function ConstructionProgressChart({
         </div>
       ) : (
         <div className="mt-7 space-y-6">
-          {entries.map((entry) => (
+          {visibleEntries.map((entry) => (
             <div key={entry.id}>
               <p className="text-xs font-semibold uppercase tracking-[0.08em] text-white/80">
                 {entry.stageName}
@@ -169,7 +280,7 @@ export function ConstructionProgressChart({
 
               <div className="mt-2 space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="w-14 shrink-0 text-[0.6rem] uppercase tracking-[0.1em] text-white/40">
+                  <span className="w-16 shrink-0 text-[0.6rem] uppercase tracking-[0.1em] text-white/40">
                     Obra
                   </span>
 
@@ -196,8 +307,8 @@ export function ConstructionProgressChart({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="w-14 shrink-0 text-[0.6rem] uppercase tracking-[0.1em] text-white/40">
-                    Pagado
+                  <span className="w-16 shrink-0 text-[0.6rem] uppercase tracking-[0.1em] text-white/40">
+                    Financiero
                   </span>
 
                   <div className="relative h-2.5 flex-1 overflow-hidden rounded-full bg-white/10">

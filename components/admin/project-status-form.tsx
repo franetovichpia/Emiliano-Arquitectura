@@ -31,10 +31,12 @@ export function ProjectStatusForm({
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
     setIsSaving(true);
     setError(null);
+    setSaved(false);
 
     try {
       const response = await fetch(
@@ -54,6 +56,7 @@ export function ProjectStatusForm({
         );
       }
 
+      setSaved(true);
       router.refresh();
     } catch (err: unknown) {
       setError(
@@ -75,11 +78,12 @@ export function ProjectStatusForm({
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <select
           className="min-h-11 rounded-xl border border-white/15 bg-white/[0.07] px-4 text-sm text-paper outline-none focus:border-terracotta"
-          onChange={(event) =>
+          onChange={(event) => {
             setStatus(
               event.target.value as ProjectStatus,
-            )
-          }
+            );
+            setSaved(false);
+          }}
           value={status}
         >
           {statusOptions.map((option) => (
@@ -108,6 +112,12 @@ export function ProjectStatusForm({
             strokeWidth={1.8}
           />
         </button>
+
+        {saved ? (
+          <span className="text-xs text-sage">
+            Estado actualizado ✓
+          </span>
+        ) : null}
       </div>
 
       {error ? (

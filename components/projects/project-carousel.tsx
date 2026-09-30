@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, Maximize2 } from "lucide-react";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { ProjectDetailsModal } from "@/components/projects/project-details-modal";
@@ -247,10 +248,12 @@ export function ProjectCarousel({ projects }: ProjectCarouselProps) {
             >
               <div className="relative size-full overflow-hidden bg-blueprint-deep">
                 {project.images[0] ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     alt={project.title}
-                    className="absolute inset-0 size-full object-cover"
+                    className="object-cover"
+                    fill
+                    priority={index === currentIndex}
+                    sizes="(min-width: 640px) 21rem, 68vw"
                     src={project.images[0]}
                   />
                 ) : null}
@@ -299,10 +302,10 @@ export function ProjectCarousel({ projects }: ProjectCarouselProps) {
             <button
               aria-current={index === currentIndex}
               aria-label={`Ir al proyecto ${project.title}`}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
+              className={`h-1.5 w-6 origin-left rounded-full transition-[transform,background-color] duration-300 ${
                 index === currentIndex
-                  ? "w-6 bg-terracotta"
-                  : "w-1.5 bg-white/25 hover:bg-white/45"
+                  ? "scale-x-100 bg-terracotta"
+                  : "scale-x-[0.25] bg-white/25 hover:bg-white/45"
               }`}
               key={project.slug}
               onClick={() => goTo(index)}

@@ -75,10 +75,13 @@ export default async function AdminDashboardPage() {
             </p>
           </Link>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 opacity-50">
+          <Link
+            className="group rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition-colors hover:border-terracotta/40"
+            href="/admin/materiales"
+          >
             <Layers
               aria-hidden="true"
-              className="text-white/40"
+              className="text-terracotta"
               size={22}
               strokeWidth={1.6}
             />
@@ -88,14 +91,19 @@ export default async function AdminDashboardPage() {
             </p>
 
             <p className="mt-1 text-xs text-white/45">
-              Próximamente.
+              Configurar el acabado de los
+              materiales detectados en cada
+              modelo BIM.
             </p>
-          </div>
+          </Link>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 opacity-50">
+          <Link
+            className="group rounded-2xl border border-white/10 bg-white/[0.04] p-6 transition-colors hover:border-terracotta/40"
+            href="/admin/analisis-bim"
+          >
             <BarChart3
               aria-hidden="true"
-              className="text-white/40"
+              className="text-terracotta"
               size={22}
               strokeWidth={1.6}
             />
@@ -105,9 +113,10 @@ export default async function AdminDashboardPage() {
             </p>
 
             <p className="mt-1 text-xs text-white/45">
-              Próximamente.
+              Ver el avance de cada proyecto y
+              copiar el link para el cliente.
             </p>
-          </div>
+          </Link>
 
           {session.role === "admin" ? (
             <Link

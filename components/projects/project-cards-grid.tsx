@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useCallback, useState } from "react";
 import { Boxes, LineChart, Maximize2 } from "lucide-react";
 
@@ -44,10 +45,11 @@ export function ProjectCardsGrid({
           >
             <div className="relative size-full overflow-hidden bg-[#071d31]">
               {project.images[0] ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Image
                   alt={project.title}
-                  className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
                   src={project.images[0]}
                 />
               ) : null}

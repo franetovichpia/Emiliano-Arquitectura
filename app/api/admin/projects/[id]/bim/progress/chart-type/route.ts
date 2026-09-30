@@ -1,8 +1,12 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
-import { setProjectProgressChartType } from "@/lib/db/collections";
+import {
+  getAdminProjectById,
+  setProjectProgressChartType,
+} from "@/lib/db/collections";
 import { progressChartTypeSchema } from "@/lib/db/schemas";
 
 const updateChartTypeSchema = z.object({
@@ -43,6 +47,17 @@ export async function PATCH(
     id,
     body.data.chartType,
   );
+
+  try {
+    const project = await getAdminProjectById(id);
+
+    if (project) {
+      revalidatePath(`/modelos/${project.slug}`);
+    }
+  } catch {
+    // El tipo de gráfico ya se guardó; si falla la
+    // revalidación no debe tirar abajo el guardado.
+  }
 
   return NextResponse.json({ ok: true });
 }

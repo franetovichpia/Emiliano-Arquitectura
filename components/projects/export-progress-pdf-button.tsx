@@ -174,7 +174,7 @@ async function buildAndDownloadPdf(
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.text(
-    "PAGADO",
+    "AVANCE FINANCIERO",
     secondBoxX + 6,
     cursorY + 9,
   );
@@ -236,7 +236,7 @@ async function buildAndDownloadPdf(
       cursorY + 5.5,
     );
     doc.text(
-      "PAGADO",
+      "FINANC.",
       colPaid,
       cursorY + 5.5,
     );
@@ -309,7 +309,7 @@ async function buildAndDownloadPdf(
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
   doc.text(
-    "Este certificado refleja el avance de obra y el porcentaje pagado registrados a la fecha de emision.",
+    "Este certificado refleja el avance de obra y el avance financiero registrados a la fecha de emision.",
     marginX,
     cursorY,
     { maxWidth: tableWidth },

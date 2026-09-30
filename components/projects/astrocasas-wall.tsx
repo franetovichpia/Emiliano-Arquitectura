@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   useCallback,
   useEffect,
@@ -382,13 +383,14 @@ export function AstrocasasWall({
                   type="button"
                 >
                   {imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
                       alt={
                         item.project?.title ??
                         item.label
                       }
-                      className="absolute inset-0 size-full object-cover"
+                      className="object-cover"
+                      fill
+                      sizes="(min-width: 640px) 16rem, 14rem"
                       src={imageUrl}
                     />
                   ) : (
@@ -447,10 +449,10 @@ export function AstrocasasWall({
           <button
             aria-current={index === currentIndex}
             aria-label={`Ir a ${item.label}`}
-            className={`h-1.5 rounded-full transition-all duration-300 ${
+            className={`h-1.5 w-6 origin-left rounded-full transition-[transform,background-color] duration-300 ${
               index === currentIndex
-                ? "w-6 bg-terracotta"
-                : "w-1.5 bg-forest-deep/20 hover:bg-forest-deep/40"
+                ? "scale-x-100 bg-terracotta"
+                : "scale-x-[0.25] bg-forest-deep/20 hover:bg-forest-deep/40"
             }`}
             key={item.key}
             onClick={() => goTo(index)}

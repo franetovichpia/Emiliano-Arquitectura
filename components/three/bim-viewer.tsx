@@ -590,6 +590,31 @@ export function BimViewer({
           smooth,
         );
 
+        const fittedPosition =
+          camera.controls.getPosition(
+            new THREE.Vector3(),
+          );
+
+        const fittedTarget =
+          camera.controls.getTarget(
+            new THREE.Vector3(),
+          );
+        
+        const closerPosition = fittedTarget
+          .clone()
+          .lerp(fittedPosition, 0.78);
+
+
+        await camera.controls.setLookAt(
+          closerPosition.x,
+          closerPosition.y,
+          closerPosition.z,
+          fittedTarget.x,
+          fittedTarget.y,
+          fittedTarget.z,
+          smooth,
+        );
+
         await fragments.core.update(true);
       };
 

@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -64,6 +65,17 @@ export async function POST(
 
   await setProjectBimModel(id, body.data);
 
+  try {
+    const savedProject = await getAdminProjectById(id);
+
+    if (savedProject) {
+      revalidatePath(`/modelos/${savedProject.slug}`);
+    }
+  } catch {
+    // El modelo ya se guardó; si falla la
+    // revalidación no debe tirar abajo el guardado.
+  }
+
   return NextResponse.json({ ok: true });
 }
 
@@ -98,6 +110,15 @@ export async function DELETE(
   }
 
   await removeProjectBimModel(id);
+
+  try {
+    if (project) {
+      revalidatePath(`/modelos/${project.slug}`);
+    }
+  } catch {
+    // El modelo ya se eliminó; si falla la
+    // revalidación no debe tirar abajo el borrado.
+  }
 
   return NextResponse.json({ ok: true });
 }

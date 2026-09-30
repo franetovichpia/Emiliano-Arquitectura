@@ -4,13 +4,13 @@ import {
   notFound,
   redirect,
 } from "next/navigation";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
 import { AdminProjectInfoForm } from "@/components/forms/admin-project-info-form";
 import { ProjectBimMaterialsEditor } from "@/components/admin/project-bim-materials-editor";
 import { ProjectBimUploader } from "@/components/admin/project-bim-uploader";
 import { ProjectCategoryProgressEditor } from "@/components/admin/project-category-progress-editor";
-import { ProjectMediaDeleteButton } from "@/components/admin/project-media-delete-button";
+import { ProjectMediaGrid } from "@/components/admin/project-media-grid";
 import { ProjectMediaUploader } from "@/components/admin/project-media-uploader";
 import { ProjectProgressChartTypeSelector } from "@/components/admin/project-progress-chart-type-selector";
 import { ProjectProgressEditor } from "@/components/admin/project-progress-editor";
@@ -122,70 +122,27 @@ export default async function AdminProjectPage({
               />
             </div>
 
-            {project.media.length === 0 ? (
-              <p className="mt-4 text-sm text-white/45">
-                Todavía no subiste ninguna
-                imagen ni documento.
-              </p>
-            ) : (
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {project.media.map((item) => {
-                  const url = getPublicUrl(
-                    "media",
-                    item.storageKey,
-                  );
-
-                  const isImage =
-                    item.mediaType ===
-                      "imagen" ||
-                    item.mediaType === "render";
-
-                  return (
-                    <a
-                      className="group relative aspect-square overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]"
-                      href={url}
-                      key={item.id}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      <ProjectMediaDeleteButton
-                        mediaId={item.id}
-                        mediaTitle={
-                          item.title ??
-                          "este archivo"
-                        }
-                        projectId={project._id.toString()}
-                      />
-
-                      {isImage ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          alt={item.title ?? ""}
-                          className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          src={url}
-                        />
-                      ) : (
-                        <div className="flex size-full flex-col items-center justify-center gap-2 p-3 text-center">
-                          <FileText
-                            aria-hidden="true"
-                            className="text-white/40"
-                            size={22}
-                            strokeWidth={1.5}
-                          />
-
-                          <span className="line-clamp-2 text-[0.6rem] text-white/50">
-                            {item.title}
-                          </span>
-                        </div>
-                      )}
-                    </a>
-                  );
-                })}
-              </div>
-            )}
+            <ProjectMediaGrid
+              media={project.media.map((item) => ({
+                id: item.id,
+                title:
+                  item.title ?? "este archivo",
+                url: getPublicUrl(
+                  "media",
+                  item.storageKey,
+                ),
+                isImage:
+                  item.mediaType === "imagen" ||
+                  item.mediaType === "render",
+              }))}
+              projectId={project._id.toString()}
+            />
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+          <div
+            className="scroll-mt-8 rounded-2xl border border-white/10 bg-white/[0.04] p-5"
+            id="materiales"
+          >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-sage">

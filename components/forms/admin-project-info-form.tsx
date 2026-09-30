@@ -210,7 +210,7 @@ export function AdminProjectInfoForm({
 
         <div className="sm:col-span-2">
           <label className={labelClasses}>
-            Herramientas (separadas por coma)
+            Lenguaje utilizado (separadas por coma)
           </label>
 
           <input

@@ -1,8 +1,12 @@
+import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
-import { addConstructionProgressEntry } from "@/lib/db/collections";
+import {
+  addConstructionProgressEntry,
+  getAdminProjectById,
+} from "@/lib/db/collections";
 
 const addProgressSchema = z.object({
   stageName: z.string().min(1),
@@ -48,6 +52,18 @@ export async function POST(
     projectId: id,
     ...body.data,
   });
+
+  try {
+    const project = await getAdminProjectById(id);
+
+    if (project) {
+      revalidatePath(`/modelos/${project.slug}`);
+    }
+  } catch {
+    // La etapa ya se guardó; si falla la
+    // revalidación de la página pública no
+    // debe tirar abajo el guardado.
+  }
 
   return NextResponse.json({
     ok: true,

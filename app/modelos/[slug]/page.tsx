@@ -18,6 +18,15 @@ import {
 import { getPublicUrl } from "@/lib/storage/r2-client";
 import { formatFileSize } from "@/utils/format";
 
+/*
+ * Respaldo por si algún otro endpoint modifica el
+ * proyecto sin invalidar la página explícitamente: como
+ * mucho el link que se le manda al cliente tarda 1 minuto
+ * en reflejar un cambio. Los endpoints de avance de obra
+ * ya invalidan esta página al instante con revalidatePath.
+ */
+export const revalidate = 60;
+
 type ModelViewerPageProps = {
   params: Promise<{
     slug: string;
