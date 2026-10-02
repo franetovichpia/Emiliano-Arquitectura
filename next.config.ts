@@ -6,6 +6,19 @@ const nextConfig = {
   compress: true,
   devIndicators: false,
 
+  /*
+   * Sin esto, "next dev" rechaza las peticiones que no
+   * vienen de localhost (por ejemplo, abrir el sitio
+   * desde el celular usando la IP de la red local tipo
+   * 192.168.x.x), rompiendo el login, las navegaciones
+   * del lado del cliente y otras acciones que hacen
+   * pedidos al servidor.
+   */
+  allowedDevOrigins: [
+    "192.168.0.202",
+    "192.168.0.*",
+  ],
+
   turbopack: {
     root: process.cwd(),
   },

@@ -139,6 +139,7 @@ export function ServicesSection() {
 
               <div className="flex lg:col-span-4 lg:justify-end">
                 <ButtonLink
+                  className="inline-flex"
                   href="#contacto"
                   showArrow
                 >

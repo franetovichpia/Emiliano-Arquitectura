@@ -81,6 +81,7 @@ export default function ErrorPage({
           </button>
 
           <ButtonLink
+            className="inline-flex"
             href="/"
             variant="light"
           >

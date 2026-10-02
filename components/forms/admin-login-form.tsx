@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   useForm,
   type SubmitHandler,
@@ -28,8 +27,6 @@ const errorClasses =
   "text-xs leading-5 text-[#ffb5a0]";
 
 export function AdminLoginForm() {
-  const router = useRouter();
-
   const [formError, setFormError] =
     useState<string | null>(null);
 
@@ -83,8 +80,15 @@ export function AdminLoginForm() {
         throw new Error(message);
       }
 
-      router.push("/admin");
-      router.refresh();
+      /*
+       * Navegación dura (no router.push) a propósito: en
+       * una conexión más lenta (celular por wifi, no la
+       * compu local) router.push + router.refresh podían
+       * entrar en carrera y terminar re-mostrando el login
+       * vacío sin haber entrado, aunque la sesión ya se
+       * había creado del lado del servidor.
+       */
+      window.location.assign("/admin");
     } catch (error: unknown) {
       setFormError(
         error instanceof Error

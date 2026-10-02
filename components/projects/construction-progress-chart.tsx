@@ -169,14 +169,22 @@ export function ConstructionProgressChart({
             onChange={(event) =>
               setSelectedId(event.target.value)
             }
+            style={{ colorScheme: "dark" }}
             value={selectedId}
           >
-            <option value="all">
+            <option
+              className="bg-forest-deep text-paper"
+              value="all"
+            >
               Todas las {pluralGroupLabel}
             </option>
 
             {entries.map((entry) => (
-              <option key={entry.id} value={entry.id}>
+              <option
+                className="bg-forest-deep text-paper"
+                key={entry.id}
+                value={entry.id}
+              >
                 {entry.stageName}
               </option>
             ))}

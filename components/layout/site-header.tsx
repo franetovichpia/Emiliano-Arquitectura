@@ -117,7 +117,7 @@ export function SiteHeader() {
       <Container className="pointer-events-auto">
         <div
           className={cn(
-            "relative flex min-h-16 items-center justify-between rounded-[1.2rem] border px-3 py-2 transition-all duration-500 sm:px-4",
+            "relative flex min-h-16 items-center justify-between rounded-[1.2rem] border px-3 py-2 transition-[background-color,border-color,box-shadow] duration-500 sm:px-4",
             isScrolled
               ? "glass-surface border-white/50 shadow-[0_1rem_3rem_rgb(11_38_55/0.14)]"
               : "border-white/30 bg-paper/80 shadow-[0_0.75rem_2.5rem_rgb(11_38_55/0.1)] backdrop-blur-xl",
@@ -223,7 +223,7 @@ export function SiteHeader() {
           {/* Menú mobile */}
           {isMenuOpen ? (
             <div
-              className="absolute left-0 right-0 top-[calc(100%+0.65rem)] max-h-[calc(100svh-7rem)] overflow-y-auto rounded-[1.35rem] border border-blueprint-line/20 bg-blueprint-deep/98 text-ivory shadow-[0_2rem_5rem_rgb(0_0_0/0.38)] backdrop-blur-2xl lg:hidden"
+              className="absolute left-0 right-0 top-[calc(100%+0.65rem)] max-h-[calc(100svh-7rem)] overflow-y-auto rounded-[1.35rem] border border-blueprint-line/20 bg-blueprint-deep text-ivory shadow-[0_2rem_5rem_rgb(0_0_0/0.38)] lg:hidden"
               id="mobile-navigation"
             >
               <nav

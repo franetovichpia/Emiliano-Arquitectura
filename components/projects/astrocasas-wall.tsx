@@ -132,30 +132,84 @@ function ZodiacGlyph({
   );
 }
 
+function ComingSoonModal({
+  sign,
+  onClose,
+}: {
+  sign: string;
+  onClose: () => void;
+}) {
+  return (
+    <div
+      aria-modal="true"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-ink/50 p-4 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+    >
+      <div
+        className="w-full max-w-xs rounded-2xl border border-ink/10 bg-paper p-6 text-center shadow-[0_2rem_5rem_rgb(11_38_55/0.25)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mx-auto grid size-14 place-items-center rounded-full border border-terracotta/25 bg-terracotta/10 text-terracotta">
+          <ZodiacGlyph
+            className="size-7"
+            sign={sign}
+          />
+        </div>
+
+        <p className="mt-4 font-serif text-xl text-ink">
+          Próximamente
+        </p>
+
+        <p className="mt-3 text-sm leading-6 text-ink/60">
+          Este arquetipo todavía no tiene un
+          proyecto publicado. En cuanto esté
+          listo, va a aparecer acá.
+        </p>
+
+        <button
+          className="mt-6 inline-flex min-h-10 w-full items-center justify-center rounded-full border border-ink/15 bg-white/60 px-5 text-[0.6rem] font-semibold uppercase tracking-[0.13em] text-ink hover:bg-white"
+          onClick={onClose}
+          type="button"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function AstrocasasWall({
   projects,
 }: AstrocasasWallProps) {
-  const isPlaceholder = projects.length === 0;
+  const projectBySign = new Map<
+    string,
+    PortfolioProject
+  >();
 
-  const items: WallItem[] = isPlaceholder
-    ? ZODIAC_ORDER.map((sign) => ({
-        key: sign,
+  for (const project of projects) {
+    const sign = normalizeSign(
+      project.zodiacSign,
+    );
+
+    if (sign && !projectBySign.has(sign)) {
+      projectBySign.set(sign, project);
+    }
+  }
+
+  const items: WallItem[] = ZODIAC_ORDER.map(
+    (sign) => {
+      const project =
+        projectBySign.get(sign) ?? null;
+
+      return {
+        key: project?.slug ?? sign,
         sign,
         label: ZODIAC_LABELS[sign],
-        project: null,
-      }))
-    : projects.map((project) => {
-        const sign =
-          normalizeSign(project.zodiacSign) ??
-          "aries";
-
-        return {
-          key: project.slug,
-          sign,
-          label: ZODIAC_LABELS[sign],
-          project,
-        };
-      });
+        project,
+      };
+    },
+  );
 
   const trackRef = useRef<HTMLDivElement | null>(
     null,
@@ -180,6 +234,9 @@ export function AstrocasasWall({
     () => setSelectedProject(null),
     [],
   );
+
+  const [comingSoonSign, setComingSoonSign] =
+    useState<string | null>(null);
 
   const offsetForIndex = useCallback(
     (index: number) => {
@@ -378,6 +435,10 @@ export function AstrocasasWall({
                       setSelectedProject(
                         item.project,
                       );
+                    } else {
+                      setComingSoonSign(
+                        item.sign,
+                      );
                     }
                   }}
                   type="button"
@@ -413,29 +474,17 @@ export function AstrocasasWall({
 
                   {item.project ? (
                     <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-left">
-                      <p className="text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-sage">
-                        {item.label}
-                      </p>
-
-                      <p className="mt-1 font-sans text-sm font-medium text-ivory">
+                      <p className="font-sans text-sm font-medium text-ivory">
                         {item.project.title}
                       </p>
                     </div>
                   ) : (
-                    <>
-                      <div
-                        aria-hidden="true"
-                        className="pointer-events-none absolute -right-14 top-7 z-10 w-52 rotate-45 bg-terracotta py-1.5 text-center text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-ivory shadow-[0_0.5rem_1rem_rgb(0_0_0/0.25)]"
-                      >
-                        Próximamente
-                      </div>
-
-                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-4 text-left">
-                        <p className="text-[0.58rem] font-semibold uppercase tracking-[0.14em] text-sage">
-                          {item.label}
-                        </p>
-                      </div>
-                    </>
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute -right-14 top-7 z-10 w-52 rotate-45 bg-terracotta py-1.5 text-center text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-ivory shadow-[0_0.5rem_1rem_rgb(0_0_0/0.25)]"
+                    >
+                      Próximamente
+                    </div>
                   )}
                 </button>
               </div>
@@ -465,6 +514,15 @@ export function AstrocasasWall({
         onClose={closeProject}
         project={selectedProject}
       />
+
+      {comingSoonSign ? (
+        <ComingSoonModal
+          onClose={() =>
+            setComingSoonSign(null)
+          }
+          sign={comingSoonSign}
+        />
+      ) : null}
     </>
   );
 }

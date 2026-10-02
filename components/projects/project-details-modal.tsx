@@ -1,6 +1,6 @@
 "use client";
 
-import { Link } from "next-view-transitions";
+import Link from "next/link";
 import {
   ArrowLeft,
   ArrowRight,
@@ -130,9 +130,15 @@ export function ProjectDetailsModal({
     <AnimatePresence>
       {project ? (
         <motion.div
-          animate={{ opacity: 1 }}
+          animate={{
+            opacity: 1,
+            pointerEvents: "auto",
+          }}
           className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-blueprint-deep/85 p-3 backdrop-blur-md sm:p-6"
-          exit={{ opacity: 0 }}
+          exit={{
+            opacity: 0,
+            pointerEvents: "none",
+          }}
           initial={{ opacity: 0 }}
           onMouseDown={(event) => {
             if (

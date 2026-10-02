@@ -229,6 +229,18 @@ export function SiteFooter() {
               />
 
               <Link
+                className="uppercase text-ivory/35 transition-colors duration-300 hover:text-sage"
+                href="/politica-privacidad"
+              >
+                Política de privacidad
+              </Link>
+
+              <span
+                aria-hidden="true"
+                className="hidden h-3 w-px bg-white/15 sm:block"
+              />
+
+              <Link
                 aria-label="Visitar el portfolio de Novaire Studio"
                 className="group inline-flex items-center gap-2 uppercase text-ivory/35 transition-colors duration-300 hover:text-sage"
                 href="https://novaire-psi.vercel.app/"

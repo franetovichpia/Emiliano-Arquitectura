@@ -438,17 +438,24 @@ export function BimViewer({
 
         camera.controls.dollyToCursor = true;
         camera.controls.infinityDolly = true;
-        camera.controls.verticalDragToForward =
-          false;
 
-        camera.controls.azimuthRotateSpeed = 1;
-        camera.controls.polarRotateSpeed = 1;
-        camera.controls.truckSpeed = 2;
-        camera.controls.dollySpeed = 1;
+        /*
+         * No deja orbitar por debajo del plano
+         * horizontal del punto mirado, para que
+         * un arrastre torpe del mouse no termine
+         * mostrando el modelo "desde abajo".
+         */
+        camera.controls.maxPolarAngle =
+          Math.PI / 2;
+
+        camera.controls.azimuthRotateSpeed = 0.6;
+        camera.controls.polarRotateSpeed = 0.6;
+        camera.controls.truckSpeed = 1.2;
+        camera.controls.dollySpeed = 0.7;
 
         camera.controls.smoothTime = smoothTime;
         camera.controls.draggingSmoothTime =
-          0.08;
+          0.12;
 
         setCameraMode("orbit");
         setIsSelectingWalkStart(false);
@@ -470,8 +477,6 @@ export function BimViewer({
 
         camera.controls.dollyToCursor = false;
         camera.controls.infinityDolly = true;
-        camera.controls.verticalDragToForward =
-          false;
 
         camera.controls.azimuthRotateSpeed =
           -0.35;
@@ -590,6 +595,12 @@ export function BimViewer({
           smooth,
         );
 
+        /*
+         * fitToBox encuadra el modelo con margen de sobra
+         * alrededor; acercamos la cámara hacia el centro
+         * para que el modelo se vea más grande al entrar
+         * al visor (y al resetear la vista).
+         */
         const fittedPosition =
           camera.controls.getPosition(
             new THREE.Vector3(),
@@ -599,11 +610,10 @@ export function BimViewer({
           camera.controls.getTarget(
             new THREE.Vector3(),
           );
-        
+
         const closerPosition = fittedTarget
           .clone()
           .lerp(fittedPosition, 0.78);
-
 
         await camera.controls.setLookAt(
           closerPosition.x,
@@ -815,7 +825,6 @@ export function BimViewer({
       const response = await fetch(
         modelUrl,
         {
-          cache: "force-cache",
           signal: abortController.signal,
         },
       );
@@ -826,15 +835,83 @@ export function BimViewer({
         );
       }
 
-      const arrayBuffer =
-        await response.arrayBuffer();
+      /*
+       * Leemos el cuerpo a mano (en vez de
+       * response.arrayBuffer()) para poder mostrar el
+       * avance real de la descarga: en una conexión lenta
+       * (celular por wifi), el progreso quedaba clavado en
+       * 8% todo el tiempo que tardaba en bajar el archivo
+       * (puede pesar 40+ MB), sin forma de distinguir una
+       * descarga lenta de una realmente colgada.
+       */
+      const totalBytes = Number(
+        response.headers.get(
+          "content-length",
+        ),
+      );
+
+      const reader =
+        response.body?.getReader();
+
+      let buffer: Uint8Array;
+
+      if (reader) {
+        const chunks: Uint8Array[] = [];
+        let receivedBytes = 0;
+
+        while (true) {
+          const { done, value } =
+            await reader.read();
+
+          if (done) {
+            break;
+          }
+
+          if (disposed) {
+            await reader.cancel();
+            return;
+          }
+
+          chunks.push(value);
+          receivedBytes += value.length;
+
+          if (totalBytes > 0) {
+            setProgress(
+              Math.round(
+                8 +
+                  Math.min(
+                    10,
+                    (receivedBytes /
+                      totalBytes) *
+                      10,
+                  ),
+              ),
+            );
+          }
+        }
+
+        buffer = new Uint8Array(
+          receivedBytes,
+        );
+
+        let offset = 0;
+
+        for (const chunk of chunks) {
+          buffer.set(chunk, offset);
+          offset += chunk.length;
+        }
+      } else {
+        const arrayBuffer =
+          await response.arrayBuffer();
+
+        buffer = new Uint8Array(
+          arrayBuffer,
+        );
+      }
 
       if (disposed) {
         return;
       }
-
-      const buffer =
-        new Uint8Array(arrayBuffer);
 
       const modelId =
         createModelId(modelName);
@@ -1165,12 +1242,51 @@ export function BimViewer({
             new THREE.Vector3(),
           );
 
-        grid.three.position.y =
+        const floorY =
           latestModelBox.min.y -
           Math.max(
             modelSize.y * 0.02,
             0.25,
           );
+
+        grid.three.position.y = floorY;
+
+        /*
+         * Límite de movimiento: evita que un
+         * arrastre de mouse torpe (o el botón
+         * "Bajar") termine llevando la cámara
+         * por debajo del piso o a kilómetros de
+         * distancia del modelo. setBoundary()
+         * frena el punto que la cámara mira
+         * dentro de esta caja; maxPolarAngle
+         * (más abajo, en configureOrbitControls)
+         * evita orbitar por debajo del piso.
+         */
+        const horizontalPadding =
+          Math.max(
+            modelSize.x,
+            modelSize.z,
+            10,
+          ) * 3;
+
+        camera.controls.setBoundary(
+          new THREE.Box3(
+            new THREE.Vector3(
+              latestModelBox.min.x -
+                horizontalPadding,
+              floorY,
+              latestModelBox.min.z -
+                horizontalPadding,
+            ),
+            new THREE.Vector3(
+              latestModelBox.max.x +
+                horizontalPadding,
+              Number.POSITIVE_INFINITY,
+              latestModelBox.max.z +
+                horizontalPadding,
+            ),
+          ),
+        );
 
         const orbitStep = Math.max(
           Math.max(
@@ -1443,7 +1559,11 @@ export function BimViewer({
        * partida antes de empezar a acercarse — si el
        * acercamiento arranca de inmediato, termina
        * antes de que el fundido del canvas siquiera
-       * se note.
+       * se note. El smoothTime más alto (vs. el 0.18
+       * normal) hace el acercamiento visiblemente más
+       * lento, como un travelling, en vez del ajuste
+       * casi instantáneo que usamos para paneos
+       * disparados por el usuario.
        */
       if (plannedEntranceFlight && !disposed) {
         await new Promise((resolve) => {
@@ -1921,7 +2041,7 @@ export function BimViewer({
                 </button>
 
                 {isFilterPanelOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 w-[min(92vw,34rem)] rounded-2xl border border-white/15 bg-[#071d31]/95 p-4 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl">
+                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 max-h-[min(70vh,32rem)] w-[min(92vw,34rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-4 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                       <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
                         <button

@@ -57,6 +57,7 @@ export default function NotFound() {
 
         <div className="mt-10 flex justify-center">
           <ButtonLink
+            className="inline-flex"
             href="/"
             variant="primary"
           >

@@ -44,12 +44,12 @@ export async function AstrocasasSection() {
               className="mt-6 max-w-4xl font-serif text-[clamp(3rem,6vw,6.5rem)] font-medium leading-[0.88] tracking-[-0.04em] text-ink"
               id="astrocasas-heading"
             >
-              Una casa
+              12 arquetipos
               <span className="block italic text-sage">
-                para cada
+                de diseño
               </span>
               <span className="block">
-                signo.
+                — Arquitectura.
               </span>
             </h2>
           </Reveal>
@@ -60,11 +60,11 @@ export async function AstrocasasSection() {
           >
             <div className="lg:pl-8">
               <p className="max-w-lg text-sm leading-7 text-ink/60 sm:text-base">
-                Doce proyectos residenciales, uno
-                por cada signo del zodíaco,
-                explorando cómo el carácter de
-                cada casa dialoga con quien la
-                habita.
+                Doce arquetipos de diseño
+                residencial, uno por cada signo
+                del zodíaco, explorando cómo el
+                carácter de cada casa dialoga con
+                quien la habita.
               </p>
 
               <Link

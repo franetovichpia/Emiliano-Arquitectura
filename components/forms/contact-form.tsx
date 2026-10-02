@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Link } from "next-view-transitions";
 import {
   useForm,
   useWatch,
@@ -533,7 +534,16 @@ export function ContactForm() {
           />
 
           <span className="text-xs leading-6 text-ivory/50">
-            Acepto que los datos ingresados sean utilizados para responder esta consulta.
+            Acepto que los datos ingresados sean utilizados
+            únicamente para responder esta consulta, según la{" "}
+            <Link
+              className="underline underline-offset-2 hover:text-sage"
+              href="/politica-privacidad"
+              target="_blank"
+            >
+              Política de Privacidad
+            </Link>
+            .
           </span>
         </label>
 
