@@ -2041,7 +2041,7 @@ export function BimViewer({
                 </button>
 
                 {isFilterPanelOpen ? (
-                  <div className="absolute right-0 top-[calc(100%+0.5rem)] z-20 max-h-[min(70vh,32rem)] w-[min(92vw,34rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-4 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl">
+                  <div className="fixed inset-x-3 top-1/2 z-20 max-h-[75vh] -translate-y-1/2 overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-4 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+0.5rem)] sm:max-h-[32rem] sm:w-[min(92vw,34rem)] sm:translate-y-0">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                       <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
                         <button
