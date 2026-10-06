@@ -136,6 +136,11 @@ export async function POST(
       });
 
     if (error) {
+      console.error(
+        "Resend error:",
+        error,
+      );
+
       return response(
         "No fue posible enviar la consulta. Intentá nuevamente.",
         502,
