@@ -32,6 +32,7 @@ import {
   RotateCcw,
   Shapes,
   SlidersHorizontal,
+  X,
 } from "lucide-react";
 
 import {
@@ -198,6 +199,9 @@ export function BimViewer({
   const activeViewerSessionRef =
     useRef<symbol | null>(null);
 
+  const filterPanelRef =
+    useRef<HTMLDivElement | null>(null);
+
   const [
     selectedCategories,
     setSelectedCategories,
@@ -255,6 +259,38 @@ export function BimViewer({
     walkSelectionMessage,
     setWalkSelectionMessage,
   ] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isFilterPanelOpen) {
+      return;
+    }
+
+    function handlePointerDown(
+      event: PointerEvent,
+    ) {
+      if (
+        filterPanelRef.current &&
+        event.target instanceof Node &&
+        !filterPanelRef.current.contains(
+          event.target,
+        )
+      ) {
+        setIsFilterPanelOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "pointerdown",
+      handlePointerDown,
+    );
+
+    return () => {
+      document.removeEventListener(
+        "pointerdown",
+        handlePointerDown,
+      );
+    };
+  }, [isFilterPanelOpen]);
 
   useEffect(() => {
     const viewerSessionId = Symbol(
@@ -1990,7 +2026,10 @@ export function BimViewer({
             {availableCategories.length > 0 ||
             (visibleMaterials &&
               visibleMaterials.length > 0) ? (
-              <div className="relative">
+              <div
+                className="relative"
+                ref={filterPanelRef}
+              >
                 <button
                   aria-expanded={
                     isFilterPanelOpen
@@ -2042,6 +2081,29 @@ export function BimViewer({
 
                 {isFilterPanelOpen ? (
                   <div className="fixed inset-x-3 top-1/2 z-20 max-h-[75vh] -translate-y-1/2 overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-4 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+0.5rem)] sm:max-h-[32rem] sm:w-[min(92vw,34rem)] sm:translate-y-0">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
+                        Filtros
+                      </p>
+
+                      <button
+                        aria-label="Cerrar filtros"
+                        className="glass-interactive grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 hover:text-white"
+                        onClick={() =>
+                          setIsFilterPanelOpen(
+                            false,
+                          )
+                        }
+                        type="button"
+                      >
+                        <X
+                          aria-hidden="true"
+                          size={15}
+                          strokeWidth={1.8}
+                        />
+                      </button>
+                    </div>
+
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                       <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
                         <button
