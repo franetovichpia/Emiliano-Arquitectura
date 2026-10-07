@@ -2000,7 +2000,7 @@ export function BimViewer({
         className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(circle_at_center,transparent_35%,rgba(3,15,27,0.52)_100%)]"
       />
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-10 p-4 sm:p-5">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="pointer-events-auto inline-flex min-h-12 items-center gap-3 rounded-full border border-white/15 bg-[#071d31]/80 px-4 text-white shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl">
             <span className="grid size-8 place-items-center rounded-full border border-[#77a8c1]/25 bg-[#77a8c1]/10 text-[#9dc3d5]">
