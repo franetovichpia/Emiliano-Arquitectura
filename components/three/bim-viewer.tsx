@@ -2080,7 +2080,7 @@ export function BimViewer({
                 </button>
 
                 {isFilterPanelOpen ? (
-                  <div className="fixed inset-x-3 bottom-3 z-[110] max-h-[75svh] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-4 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-[calc(100%+0.5rem)] sm:z-20 sm:max-h-[32rem] sm:w-[min(92vw,34rem)]">
+                  <div className="fixed inset-x-5 bottom-6 z-[110] max-h-[68svh] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-[calc(100%+0.5rem)] sm:z-20 sm:max-h-[32rem] sm:w-[min(92vw,34rem)] sm:p-4">
                     <div className="mb-3 flex items-center justify-between gap-2">
                       <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
                         Filtros
