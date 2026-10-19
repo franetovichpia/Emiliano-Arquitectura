@@ -80,9 +80,9 @@ export function ServicesSection() {
                 delay={0.05 + index * 0.04}
                 key={service.title}
               >
-                <article className="glass-interactive group flex h-full min-h-[16rem] flex-col rounded-[1.5rem] border border-white/15 bg-white/[0.055] p-6 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.1)] backdrop-blur-xl hover:border-sage/35 hover:bg-white/[0.085] sm:min-h-[17rem] sm:p-7">
+                <article className="group flex h-full min-h-[16rem] flex-col rounded-[1.5rem] border border-white/15 bg-white/[0.055] p-6 backdrop-blur-xl sm:min-h-[17rem] sm:p-7">
                   <div className="flex items-start justify-between">
-                    <div className="grid size-10 place-items-center rounded-full border border-white/15 bg-white/[0.07] text-sage transition-colors duration-300 group-hover:border-terracotta/40 group-hover:text-terracotta">
+                    <div className="grid size-10 place-items-center rounded-full border border-white/15 bg-white/[0.07] text-sage">
                       <Icon
                         aria-hidden="true"
                         size={18}
@@ -107,7 +107,7 @@ export function ServicesSection() {
 
                   <div
                     aria-hidden="true"
-                    className="mt-6 h-px w-full origin-left scale-x-25 bg-terracotta/60 transition-transform duration-500 group-hover:scale-x-100"
+                    className="mt-6 h-px w-full scale-x-25 bg-terracotta/60"
                   />
                 </article>
               </Reveal>

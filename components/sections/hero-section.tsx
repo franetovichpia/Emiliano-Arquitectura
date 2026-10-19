@@ -100,7 +100,7 @@ export function HeroSection() {
             className="group mt-7 inline-flex items-center gap-3 text-[0.58rem] font-semibold uppercase tracking-[0.17em] text-blueprint-line transition-colors duration-300 hover:text-ivory focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-terracotta focus-visible:ring-offset-4 focus-visible:ring-offset-blueprint-deep"
             href="#sobre-mi"
           >
-            Conocer su trayectoria
+            Conocer a Emiliano
 
             <ArrowDown
               aria-hidden="true"

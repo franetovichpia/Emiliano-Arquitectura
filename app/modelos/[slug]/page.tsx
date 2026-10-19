@@ -190,6 +190,7 @@ export default async function ModelViewerPage({
 
         <div className="overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#071d31] shadow-[0_2.5rem_8rem_rgb(0_0_0/0.35)]">
           <BimViewerLoader
+            categoryProgress={bimModel.categoryProgress}
             materialOverrides={bimModel.materialOverrides}
             materials={bimModel.materials}
             modelFormat={bimModel.format}
@@ -205,6 +206,7 @@ export default async function ModelViewerPage({
           >
             <div className="mb-3 flex justify-end">
               <ExportProgressPdfButton
+                clientName={project.client}
                 entries={progressEntries.map(
                   (entry) => ({
                     stageName: entry.stageName,
@@ -216,6 +218,7 @@ export default async function ModelViewerPage({
                       entry.paidPercentage,
                   }),
                 )}
+                location={project.location}
                 projectTitle={project.title}
               />
             </div>

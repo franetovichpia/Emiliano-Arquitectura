@@ -36,12 +36,12 @@ export const communityNavigation: readonly NavigationItem[] = [
     href: "/proyectos-integrativos#proyectos",
   },
   {
-    label: "Proyectos relacionados",
-    href: "/proyectos-integrativos#contenido-soberano",
-  },
-  {
     label: "Recursos",
     href: "/proyectos-integrativos#recursos",
+  },
+  {
+    label: "Proyectos relacionados",
+    href: "/proyectos-integrativos#contenido-soberano",
   },
 ];
 

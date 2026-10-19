@@ -39,7 +39,7 @@ export function SiteHeader() {
 
   const action = isCommunityPage
     ? {
-        label: "Sitio profesional",
+        label: "Inicio",
         href: "/#inicio",
       }
     : {

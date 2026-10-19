@@ -31,7 +31,6 @@ import {
   Minimize2,
   RotateCcw,
   Shapes,
-  SlidersHorizontal,
   X,
 } from "lucide-react";
 
@@ -45,12 +44,18 @@ import type { BimModelFormat } from "@/data/bim-projects";
 import type { BimMaterialInfo, MaterialFinish } from "@/lib/db/schemas";
 import { cn } from "@/utils/cn";
 
+type CategoryProgressInfo = {
+  actualPercentage: number;
+  paidPercentage: number;
+};
+
 type BimViewerProps = {
   modelFormat: BimModelFormat;
   modelName: string;
   modelUrl: string;
   materials?: readonly BimMaterialInfo[];
   materialOverrides?: Record<string, MaterialFinish>;
+  categoryProgress?: Record<string, CategoryProgressInfo>;
 };
 
 type ViewerStatus =
@@ -175,6 +180,7 @@ export function BimViewer({
   modelUrl,
   materials,
   materialOverrides,
+  categoryProgress,
 }: BimViewerProps) {
   const viewerContainerRef =
     useRef<HTMLDivElement | null>(null);
@@ -199,7 +205,10 @@ export function BimViewer({
   const activeViewerSessionRef =
     useRef<symbol | null>(null);
 
-  const filterPanelRef =
+  const materialsPanelRef =
+    useRef<HTMLDivElement | null>(null);
+
+  const propertiesPanelRef =
     useRef<HTMLDivElement | null>(null);
 
   const [
@@ -218,8 +227,15 @@ export function BimViewer({
   const [ghostOpacity, setGhostOpacity] =
     useState(0.16);
 
-  const [isFilterPanelOpen, setIsFilterPanelOpen] =
-    useState(false);
+  const [
+    isMaterialsPanelOpen,
+    setIsMaterialsPanelOpen,
+  ] = useState(false);
+
+  const [
+    isPropertiesPanelOpen,
+    setIsPropertiesPanelOpen,
+  ] = useState(false);
 
   const [
     availableMaterialColors,
@@ -261,7 +277,10 @@ export function BimViewer({
   ] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isFilterPanelOpen) {
+    if (
+      !isMaterialsPanelOpen &&
+      !isPropertiesPanelOpen
+    ) {
       return;
     }
 
@@ -269,13 +288,27 @@ export function BimViewer({
       event: PointerEvent,
     ) {
       if (
-        filterPanelRef.current &&
-        event.target instanceof Node &&
-        !filterPanelRef.current.contains(
+        !(event.target instanceof Node)
+      ) {
+        return;
+      }
+
+      if (
+        materialsPanelRef.current &&
+        !materialsPanelRef.current.contains(
           event.target,
         )
       ) {
-        setIsFilterPanelOpen(false);
+        setIsMaterialsPanelOpen(false);
+      }
+
+      if (
+        propertiesPanelRef.current &&
+        !propertiesPanelRef.current.contains(
+          event.target,
+        )
+      ) {
+        setIsPropertiesPanelOpen(false);
       }
     }
 
@@ -290,7 +323,10 @@ export function BimViewer({
         handlePointerDown,
       );
     };
-  }, [isFilterPanelOpen]);
+  }, [
+    isMaterialsPanelOpen,
+    isPropertiesPanelOpen,
+  ]);
 
   useEffect(() => {
     const viewerSessionId = Symbol(
@@ -367,7 +403,8 @@ export function BimViewer({
       setErrorMessage(null);
       setSelectedCategories(new Set());
       setSelectedMaterialKeys(new Set());
-      setIsFilterPanelOpen(false);
+      setIsMaterialsPanelOpen(false);
+      setIsPropertiesPanelOpen(false);
       setAvailableMaterialColors(new Set());
       setAvailableCategories([]);
 
@@ -2023,29 +2060,22 @@ export function BimViewer({
           </div>
 
           <div className="pointer-events-auto flex items-center gap-2">
-            {availableCategories.length > 0 ||
-            (visibleMaterials &&
-              visibleMaterials.length > 0) ? (
+            {visibleMaterials &&
+            visibleMaterials.length > 0 ? (
               <div
                 className="relative"
-                ref={filterPanelRef}
+                ref={materialsPanelRef}
               >
                 <button
                   aria-expanded={
-                    isFilterPanelOpen
+                    isMaterialsPanelOpen
                   }
                   aria-pressed={
-                    selectedCategories.size >
-                      0 ||
-                    selectedMaterialKeys.size >
-                      0
+                    selectedMaterialKeys.size > 0
                   }
                   className={cn(
                     "glass-interactive inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.57rem] font-semibold uppercase tracking-[0.13em] shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40",
-                    selectedCategories.size >
-                      0 ||
-                      selectedMaterialKeys.size >
-                        0
+                    selectedMaterialKeys.size > 0
                       ? "border-[#d17c5b]/60 bg-[#d17c5b] text-white"
                       : "border-white/15 bg-[#071d31]/80 text-white",
                   )}
@@ -2053,44 +2083,44 @@ export function BimViewer({
                     navigationDisabled
                   }
                   onClick={() =>
-                    setIsFilterPanelOpen(
+                    setIsMaterialsPanelOpen(
                       (value) => !value,
                     )
                   }
                   type="button"
                 >
-                  <SlidersHorizontal
+                  <Layers
                     aria-hidden="true"
                     size={16}
                     strokeWidth={1.6}
                   />
 
                   <span className="hidden sm:inline">
-                    Filtros
+                    Materiales
                   </span>
 
-                  {selectedCategories.size +
-                    selectedMaterialKeys.size >
+                  {selectedMaterialKeys.size >
                   0 ? (
                     <span className="grid size-4 place-items-center rounded-full bg-white/25 text-[0.55rem] font-bold">
-                      {selectedCategories.size +
-                        selectedMaterialKeys.size}
+                      {
+                        selectedMaterialKeys.size
+                      }
                     </span>
                   ) : null}
                 </button>
 
-                {isFilterPanelOpen ? (
-                  <div className="fixed inset-x-5 bottom-6 z-[110] max-h-[68svh] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:top-[calc(100%+0.5rem)] sm:z-20 sm:max-h-[32rem] sm:w-[min(92vw,34rem)] sm:p-4">
+                {isMaterialsPanelOpen ? (
+                  <div className="fixed inset-y-24 left-3 z-[110] w-[min(88vw,20rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:inset-y-auto sm:top-24 sm:max-h-[32rem] sm:p-4">
                     <div className="mb-3 flex items-center justify-between gap-2">
                       <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
-                        Filtros
+                        Materiales
                       </p>
 
                       <button
-                        aria-label="Cerrar filtros"
+                        aria-label="Cerrar materiales"
                         className="glass-interactive grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 hover:text-white"
                         onClick={() =>
-                          setIsFilterPanelOpen(
+                          setIsMaterialsPanelOpen(
                             false,
                           )
                         }
@@ -2165,14 +2195,14 @@ export function BimViewer({
                       <div className="flex items-center gap-3 border-b border-white/10 py-3">
                         <label
                           className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45"
-                          htmlFor="ghost-opacity-range"
+                          htmlFor="ghost-opacity-range-materials"
                         >
                           Transparencia
                         </label>
 
                         <input
                           className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#d17c5b]"
-                          id="ghost-opacity-range"
+                          id="ghost-opacity-range-materials"
                           max={1}
                           min={0}
                           onChange={(event) =>
@@ -2197,154 +2227,311 @@ export function BimViewer({
                       </div>
                     ) : null}
 
-                    <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      {availableCategories.length >
-                      0 ? (
-                        <div className="min-w-0">
-                          <p className="mb-2 flex items-center gap-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/45">
-                            <Shapes
-                              aria-hidden="true"
-                              size={12}
-                              strokeWidth={1.8}
-                            />
-                            Categorías
-                          </p>
+                    <div className="mt-3 max-h-80 space-y-1 overflow-y-auto pr-1">
+                      {visibleMaterials.map(
+                        (material) => {
+                          const checked =
+                            selectedMaterialKeys.has(
+                              material.key,
+                            );
 
-                          <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
-                            {availableCategories.map(
-                              (category) => {
-                                const checked =
-                                  selectedCategories.has(
-                                    category,
-                                  );
+                          return (
+                            <button
+                              className={cn(
+                                "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
+                                checked
+                                  ? "bg-white/[0.1] text-white"
+                                  : "text-white/70",
+                              )}
+                              key={
+                                material.key
+                              }
+                              onClick={() =>
+                                toggleMaterial(
+                                  material,
+                                )
+                              }
+                              type="button"
+                            >
+                              <span
+                                className={cn(
+                                  "grid size-3.5 shrink-0 place-items-center rounded border",
+                                  checked
+                                    ? "border-[#d17c5b] bg-[#d17c5b]"
+                                    : "border-white/30",
+                                )}
+                              >
+                                {checked ? (
+                                  <Check
+                                    aria-hidden="true"
+                                    className="text-white"
+                                    size={10}
+                                    strokeWidth={3}
+                                  />
+                                ) : null}
+                              </span>
 
-                                return (
-                                  <button
-                                    className={cn(
-                                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
-                                      checked
-                                        ? "bg-white/[0.1] text-white"
-                                        : "text-white/70",
-                                    )}
-                                    key={
-                                      category
-                                    }
-                                    onClick={() =>
-                                      toggleCategory(
-                                        category,
-                                      )
-                                    }
-                                    type="button"
-                                  >
-                                    <span
-                                      className={cn(
-                                        "grid size-3.5 shrink-0 place-items-center rounded border",
-                                        checked
-                                          ? "border-[#d17c5b] bg-[#d17c5b]"
-                                          : "border-white/30",
-                                      )}
-                                    >
-                                      {checked ? (
-                                        <Check
-                                          aria-hidden="true"
-                                          className="text-white"
-                                          size={10}
-                                          strokeWidth={3}
-                                        />
-                                      ) : null}
-                                    </span>
+                              <span
+                                aria-hidden="true"
+                                className="size-3 shrink-0 rounded-full border border-white/25"
+                                style={{
+                                  backgroundColor:
+                                    material.colorHex ??
+                                    "#5f91ad",
+                                }}
+                              />
 
-                                    <span className="truncate">
-                                      {category}
-                                    </span>
-                                  </button>
-                                );
-                              },
-                            )}
-                          </div>
-                        </div>
-                      ) : null}
+                              <span className="truncate">
+                                {getMaterialDisplayName(
+                                  material,
+                                  materialOverrides,
+                                )}
+                              </span>
+                            </button>
+                          );
+                        },
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
-                      {visibleMaterials &&
-                      visibleMaterials.length >
-                        0 ? (
-                        <div className="min-w-0">
-                          <p className="mb-2 flex items-center gap-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.12em] text-white/45">
-                            <Layers
-                              aria-hidden="true"
-                              size={12}
-                              strokeWidth={1.8}
-                            />
-                            Materiales
-                          </p>
+            {availableCategories.length > 0 ? (
+              <div
+                className="relative"
+                ref={propertiesPanelRef}
+              >
+                <button
+                  aria-expanded={
+                    isPropertiesPanelOpen
+                  }
+                  aria-pressed={
+                    selectedCategories.size > 0
+                  }
+                  className={cn(
+                    "glass-interactive inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.57rem] font-semibold uppercase tracking-[0.13em] shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40",
+                    selectedCategories.size > 0
+                      ? "border-[#d17c5b]/60 bg-[#d17c5b] text-white"
+                      : "border-white/15 bg-[#071d31]/80 text-white",
+                  )}
+                  disabled={
+                    navigationDisabled
+                  }
+                  onClick={() =>
+                    setIsPropertiesPanelOpen(
+                      (value) => !value,
+                    )
+                  }
+                  type="button"
+                >
+                  <Shapes
+                    aria-hidden="true"
+                    size={16}
+                    strokeWidth={1.6}
+                  />
 
-                          <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
-                            {visibleMaterials.map(
-                              (material) => {
-                                const checked =
-                                  selectedMaterialKeys.has(
-                                    material.key,
-                                  );
+                  <span className="hidden sm:inline">
+                    Propiedades
+                  </span>
 
-                                return (
-                                  <button
-                                    className={cn(
-                                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
-                                      checked
-                                        ? "bg-white/[0.1] text-white"
-                                        : "text-white/70",
-                                    )}
-                                    key={
-                                      material.key
-                                    }
-                                    onClick={() =>
-                                      toggleMaterial(
-                                        material,
-                                      )
-                                    }
-                                    type="button"
-                                  >
-                                    <span
-                                      className={cn(
-                                        "grid size-3.5 shrink-0 place-items-center rounded border",
-                                        checked
-                                          ? "border-[#d17c5b] bg-[#d17c5b]"
-                                          : "border-white/30",
-                                      )}
-                                    >
-                                      {checked ? (
-                                        <Check
-                                          aria-hidden="true"
-                                          className="text-white"
-                                          size={10}
-                                          strokeWidth={3}
-                                        />
-                                      ) : null}
-                                    </span>
+                  {selectedCategories.size >
+                  0 ? (
+                    <span className="grid size-4 place-items-center rounded-full bg-white/25 text-[0.55rem] font-bold">
+                      {
+                        selectedCategories.size
+                      }
+                    </span>
+                  ) : null}
+                </button>
 
-                                    <span
-                                      aria-hidden="true"
-                                      className="size-3 shrink-0 rounded-full border border-white/25"
-                                      style={{
-                                        backgroundColor:
-                                          material.colorHex ??
-                                          "#5f91ad",
-                                      }}
-                                    />
+                {isPropertiesPanelOpen ? (
+                  <div className="fixed inset-y-24 right-3 z-[110] w-[min(88vw,20rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:inset-y-auto sm:top-24 sm:max-h-[32rem] sm:p-4">
+                    <div className="mb-3 flex items-center justify-between gap-2">
+                      <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
+                        Propiedades
+                      </p>
 
-                                    <span className="truncate">
-                                      {getMaterialDisplayName(
-                                        material,
-                                        materialOverrides,
-                                      )}
-                                    </span>
-                                  </button>
-                                );
-                              },
-                            )}
-                          </div>
-                        </div>
-                      ) : null}
+                      <button
+                        aria-label="Cerrar propiedades"
+                        className="glass-interactive grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 hover:text-white"
+                        onClick={() =>
+                          setIsPropertiesPanelOpen(
+                            false,
+                          )
+                        }
+                        type="button"
+                      >
+                        <X
+                          aria-hidden="true"
+                          size={15}
+                          strokeWidth={1.8}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                      <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
+                        <button
+                          className={cn(
+                            "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                            visibilityMode ===
+                              "ghost"
+                              ? "bg-[#d17c5b] text-white"
+                              : "text-white/55 hover:text-white/80",
+                          )}
+                          onClick={() =>
+                            handleSetVisibilityMode(
+                              "ghost",
+                            )
+                          }
+                          type="button"
+                        >
+                          Transparentar
+                        </button>
+
+                        <button
+                          className={cn(
+                            "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                            visibilityMode ===
+                              "hide"
+                              ? "bg-[#d17c5b] text-white"
+                              : "text-white/55 hover:text-white/80",
+                          )}
+                          onClick={() =>
+                            handleSetVisibilityMode(
+                              "hide",
+                            )
+                          }
+                          type="button"
+                        >
+                          Ocultar
+                        </button>
+                      </div>
+
+                      <button
+                        className="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45 hover:text-white/75 disabled:cursor-not-allowed disabled:opacity-30"
+                        disabled={
+                          selectedCategories.size ===
+                            0 &&
+                          selectedMaterialKeys.size ===
+                            0
+                        }
+                        onClick={
+                          handleClearSelection
+                        }
+                        type="button"
+                      >
+                        Limpiar selección
+                      </button>
+                    </div>
+
+                    {visibilityMode ===
+                    "ghost" ? (
+                      <div className="flex items-center gap-3 border-b border-white/10 py-3">
+                        <label
+                          className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45"
+                          htmlFor="ghost-opacity-range-properties"
+                        >
+                          Transparencia
+                        </label>
+
+                        <input
+                          className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#d17c5b]"
+                          id="ghost-opacity-range-properties"
+                          max={1}
+                          min={0}
+                          onChange={(event) =>
+                            handleGhostOpacityChange(
+                              Number(
+                                event.target
+                                  .value,
+                              ),
+                            )
+                          }
+                          step={0.05}
+                          type="range"
+                          value={ghostOpacity}
+                        />
+
+                        <span className="w-9 shrink-0 text-right text-[0.6rem] text-white/55">
+                          {Math.round(
+                            ghostOpacity * 100,
+                          )}
+                          %
+                        </span>
+                      </div>
+                    ) : null}
+
+                    <div className="mt-3 max-h-80 space-y-1 overflow-y-auto pr-1">
+                      {availableCategories.map(
+                        (category) => {
+                          const checked =
+                            selectedCategories.has(
+                              category,
+                            );
+
+                          const progressEntry =
+                            categoryProgress?.[
+                              category
+                            ];
+
+                          return (
+                            <button
+                              className={cn(
+                                "group relative flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
+                                checked
+                                  ? "bg-white/[0.1] text-white"
+                                  : "text-white/70",
+                              )}
+                              key={
+                                category
+                              }
+                              onClick={() =>
+                                toggleCategory(
+                                  category,
+                                )
+                              }
+                              type="button"
+                            >
+                              <span
+                                className={cn(
+                                  "grid size-3.5 shrink-0 place-items-center rounded border",
+                                  checked
+                                    ? "border-[#d17c5b] bg-[#d17c5b]"
+                                    : "border-white/30",
+                                )}
+                              >
+                                {checked ? (
+                                  <Check
+                                    aria-hidden="true"
+                                    className="text-white"
+                                    size={10}
+                                    strokeWidth={3}
+                                  />
+                                ) : null}
+                              </span>
+
+                              <span className="truncate">
+                                {category}
+                              </span>
+
+                              {progressEntry ? (
+                                <span
+                                  className="pointer-events-none absolute left-full top-1/2 z-10 ml-2 w-max max-w-[11rem] -translate-y-1/2 rounded-lg border border-white/15 bg-[#0b2434] px-2.5 py-1.5 text-[0.62rem] font-semibold normal-case tracking-normal text-white opacity-0 shadow-[0_0.75rem_2rem_rgb(0_0_0/0.35)] transition-opacity duration-150 group-hover:opacity-100"
+                                  role="status"
+                                >
+                                  Avance de obra:{" "}
+                                  {
+                                    progressEntry.actualPercentage
+                                  }
+                                  %
+                                </span>
+                              ) : null}
+                            </button>
+                          );
+                        },
+                      )}
                     </div>
                   </div>
                 ) : null}

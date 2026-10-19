@@ -12,6 +12,8 @@ type ExportProgressEntry = {
 
 type ExportProgressPdfButtonProps = {
   projectTitle: string;
+  clientName?: string;
+  location?: string;
   entries: readonly ExportProgressEntry[];
 };
 
@@ -59,6 +61,8 @@ function average(values: readonly number[]) {
 
 async function buildAndDownloadPdf(
   projectTitle: string,
+  clientName: string | undefined,
+  location: string | undefined,
   entries: readonly ExportProgressEntry[],
 ) {
   const { jsPDF } = await import("jspdf");
@@ -90,8 +94,16 @@ async function buildAndDownloadPdf(
     },
   );
 
+  const headerLines = [
+    clientName ? `Cliente: ${clientName}` : null,
+    location ? `Ubicación: ${location}` : null,
+  ].filter((line): line is string => line !== null);
+
+  const headerHeight =
+    38 + (headerLines.length > 0 ? 7 : 0);
+
   doc.setFillColor(7, 29, 49);
-  doc.rect(0, 0, pageWidth, 38, "F");
+  doc.rect(0, 0, pageWidth, headerHeight, "F");
 
   doc.setTextColor(247, 242, 232);
   doc.setFont("helvetica", "bold");
@@ -114,7 +126,16 @@ async function buildAndDownloadPdf(
     { align: "right" },
   );
 
-  let cursorY = 52;
+  if (headerLines.length > 0) {
+    doc.setFontSize(9);
+    doc.text(
+      headerLines.join("   ·   "),
+      marginX,
+      34,
+    );
+  }
+
+  let cursorY = headerHeight + 14;
 
   doc.setTextColor(30, 30, 30);
   doc.setFont("helvetica", "bold");
@@ -322,6 +343,8 @@ async function buildAndDownloadPdf(
 
 export function ExportProgressPdfButton({
   projectTitle,
+  clientName,
+  location,
   entries,
 }: ExportProgressPdfButtonProps) {
   const [isGenerating, setIsGenerating] =
@@ -337,6 +360,8 @@ export function ExportProgressPdfButton({
     try {
       await buildAndDownloadPdf(
         projectTitle,
+        clientName,
+        location,
         entries,
       );
     } finally {

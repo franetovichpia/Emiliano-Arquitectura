@@ -11,6 +11,13 @@ type BimViewerLoaderProps = {
   modelUrl: string;
   materials?: readonly BimMaterialInfo[];
   materialOverrides?: Record<string, MaterialFinish>;
+  categoryProgress?: Record<
+    string,
+    {
+      actualPercentage: number;
+      paidPercentage: number;
+    }
+  >;
 };
 
 const BimViewer = dynamic(
@@ -40,9 +47,11 @@ export function BimViewerLoader({
   modelUrl,
   materials,
   materialOverrides,
+  categoryProgress,
 }: BimViewerLoaderProps) {
   return (
     <BimViewer
+      categoryProgress={categoryProgress}
       materialOverrides={materialOverrides}
       materials={materials}
       modelFormat={modelFormat}
