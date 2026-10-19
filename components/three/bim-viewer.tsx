@@ -2063,7 +2063,6 @@ export function BimViewer({
             {visibleMaterials &&
             visibleMaterials.length > 0 ? (
               <div
-                className="relative"
                 ref={materialsPanelRef}
               >
                 <button
@@ -2110,7 +2109,7 @@ export function BimViewer({
                 </button>
 
                 {isMaterialsPanelOpen ? (
-                  <div className="fixed inset-y-24 left-3 z-[110] w-[min(88vw,20rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:inset-y-auto sm:top-24 sm:max-h-[32rem] sm:p-4">
+                  <div className="absolute left-0 top-full z-[110] mt-2 max-h-[60svh] w-[min(88vw,20rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:max-h-[32rem] sm:p-4">
                     <div className="mb-3 flex items-center justify-between gap-2">
                       <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
                         Materiales
@@ -2299,7 +2298,6 @@ export function BimViewer({
 
             {availableCategories.length > 0 ? (
               <div
-                className="relative"
                 ref={propertiesPanelRef}
               >
                 <button
@@ -2346,7 +2344,7 @@ export function BimViewer({
                 </button>
 
                 {isPropertiesPanelOpen ? (
-                  <div className="fixed inset-y-24 right-3 z-[110] w-[min(88vw,20rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:inset-y-auto sm:top-24 sm:max-h-[32rem] sm:p-4">
+                  <div className="absolute right-0 top-full z-[110] mt-2 max-h-[60svh] w-[min(88vw,20rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:max-h-[32rem] sm:p-4">
                     <div className="mb-3 flex items-center justify-between gap-2">
                       <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
                         Propiedades
