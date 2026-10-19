@@ -42,7 +42,7 @@ export function CommunityHeroSection() {
                 strokeWidth={1.5}
               />
 
-              Volver a la página profesional
+              Volver al sitio principal
             </Link>
           </Reveal>
 
