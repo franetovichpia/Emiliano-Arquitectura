@@ -44,6 +44,11 @@
   --blueprint-soft: #315d75;
   --blueprint-line: #83aebe;
 
+  /* Variantes rgb para mezclar con alfa en clases utilitarias */
+  --blueprint-rgb: 22 56 75;
+  --blueprint-deep-rgb: 11 38 55;
+  --blueprint-line-rgb: 131 174 190;
+
   /* Colores de detalle */
 
   --construction: #c66f4e;
@@ -157,12 +162,12 @@ p {
 /* Superficie azul */
 
 .glass-surface-dark {
-  border: 1px solid rgb(131 174 190 / 16%);
+  border: 1px solid rgb(var(--blueprint-line-rgb) / 16%);
   background:
     linear-gradient(
       135deg,
-      rgb(22 56 75 / 90%),
-      rgb(11 38 55 / 82%)
+      rgb(var(--blueprint-rgb) / 90%),
+      rgb(var(--blueprint-deep-rgb) / 82%)
     );
   box-shadow:
     0 1rem 3rem rgb(3 19 28 / 20%),
@@ -275,19 +280,19 @@ p {
     radial-gradient(
       circle at 87% 45%,
       transparent 0 21%,
-      rgb(131 174 190 / 14%) 21.15%,
+      rgb(var(--blueprint-line-rgb) / 14%) 21.15%,
       transparent 21.45%
     ),
     radial-gradient(
       circle at 87% 45%,
       transparent 0 31%,
-      rgb(131 174 190 / 11%) 31.15%,
+      rgb(var(--blueprint-line-rgb) / 11%) 31.15%,
       transparent 31.45%
     ),
     radial-gradient(
       circle at 87% 45%,
       transparent 0 42%,
-      rgb(131 174 190 / 9%) 42.15%,
+      rgb(var(--blueprint-line-rgb) / 9%) 42.15%,
       transparent 42.45%
     ),
     radial-gradient(
@@ -360,7 +365,7 @@ section[id] {
   }
 
   .glass-surface-dark {
-    background: rgb(11 38 55 / 97%);
+    background: rgb(var(--blueprint-deep-rgb) / 97%);
   }
 }
 
@@ -376,6 +381,27 @@ section[id] {
   .card-compact {
     padding: 1.1rem;
   }
+}
+
+/*
+ * Paleta invertida azul↔verde, solo para el sitio de
+ * proyectos integrativos: lo que en el resto del sitio es
+ * la familia azul blueprint pasa a verde, y el acento verde
+ * (sage/nature) pasa a azul. Se aplica agregando la clase
+ * .integrativos-theme a un contenedor de esas páginas.
+ */
+
+.integrativos-theme {
+  --blueprint: #223d2c;
+  --blueprint-deep: #122318;
+  --blueprint-soft: #3f6b4c;
+  --blueprint-line: #93c7a0;
+
+  --blueprint-rgb: 34 61 44;
+  --blueprint-deep-rgb: 18 35 24;
+  --blueprint-line-rgb: 147 199 160;
+
+  --nature: #6fa0c2;
 }
 
 /* Accesibilidad */

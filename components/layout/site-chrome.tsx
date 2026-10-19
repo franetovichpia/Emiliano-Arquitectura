@@ -40,6 +40,10 @@ export function SiteChrome({
   const pathname = usePathname();
   const isAdminRoute =
     pathname.startsWith("/admin");
+  const isCommunityRoute =
+    pathname.startsWith(
+      "/proyectos-integrativos",
+    );
 
   useEffect(() => {
     const handleRejection = (
@@ -66,12 +70,18 @@ export function SiteChrome({
   }, []);
 
   return (
-    <>
+    <div
+      className={
+        isCommunityRoute
+          ? "integrativos-theme"
+          : undefined
+      }
+    >
       {isAdminRoute ? null : <SiteHeader />}
 
       {children}
 
       {isAdminRoute ? null : <SiteFooter />}
-    </>
+    </div>
   );
 }

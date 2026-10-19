@@ -205,12 +205,6 @@ export function BimViewer({
   const activeViewerSessionRef =
     useRef<symbol | null>(null);
 
-  const materialsPanelRef =
-    useRef<HTMLDivElement | null>(null);
-
-  const propertiesPanelRef =
-    useRef<HTMLDivElement | null>(null);
-
   const [
     selectedCategories,
     setSelectedCategories,
@@ -275,58 +269,6 @@ export function BimViewer({
     walkSelectionMessage,
     setWalkSelectionMessage,
   ] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (
-      !isMaterialsPanelOpen &&
-      !isPropertiesPanelOpen
-    ) {
-      return;
-    }
-
-    function handlePointerDown(
-      event: PointerEvent,
-    ) {
-      if (
-        !(event.target instanceof Node)
-      ) {
-        return;
-      }
-
-      if (
-        materialsPanelRef.current &&
-        !materialsPanelRef.current.contains(
-          event.target,
-        )
-      ) {
-        setIsMaterialsPanelOpen(false);
-      }
-
-      if (
-        propertiesPanelRef.current &&
-        !propertiesPanelRef.current.contains(
-          event.target,
-        )
-      ) {
-        setIsPropertiesPanelOpen(false);
-      }
-    }
-
-    document.addEventListener(
-      "pointerdown",
-      handlePointerDown,
-    );
-
-    return () => {
-      document.removeEventListener(
-        "pointerdown",
-        handlePointerDown,
-      );
-    };
-  }, [
-    isMaterialsPanelOpen,
-    isPropertiesPanelOpen,
-  ]);
 
   useEffect(() => {
     const viewerSessionId = Symbol(
@@ -1948,7 +1890,7 @@ export function BimViewer({
     <div
       aria-label={`Visor arquitectónico OpenBIM de ${modelName}`}
       className={cn(
-        "relative h-[72svh] min-h-[38rem] max-h-[58rem] overflow-hidden bg-[#071d31] text-white outline-none focus-visible:ring-2 focus-visible:ring-[#d17c5b] focus-visible:ring-inset fullscreen:h-screen fullscreen:min-h-0 fullscreen:max-h-none",
+        "relative flex h-[72svh] min-h-[38rem] max-h-[58rem] overflow-hidden bg-[#071d31] text-white outline-none focus-visible:ring-2 focus-visible:ring-[#d17c5b] focus-visible:ring-inset fullscreen:h-screen fullscreen:min-h-0 fullscreen:max-h-none",
         isSelectingWalkStart &&
           "[&_canvas]:cursor-crosshair",
       )}
@@ -1968,103 +1910,101 @@ export function BimViewer({
       role="region"
       tabIndex={0}
     >
-      <div
-        className={cn(
-          "absolute inset-0 transition-opacity duration-700 ease-out [&_canvas]:h-full [&_canvas]:w-full [&_canvas]:outline-none",
-          status === "loaded"
-            ? "opacity-100"
-            : "opacity-0",
-        )}
-        ref={viewerContainerRef}
-      />
+      <div className="relative min-w-0 flex-1 overflow-hidden">
+        <div
+          className={cn(
+            "absolute inset-0 transition-opacity duration-700 ease-out [&_canvas]:h-full [&_canvas]:w-full [&_canvas]:outline-none",
+            status === "loaded"
+              ? "opacity-100"
+              : "opacity-0",
+          )}
+          ref={viewerContainerRef}
+        />
 
-      <AnimatePresence>
-        {isBusy ? (
-          <motion.div
-            animate={{ opacity: 1 }}
-            className="pointer-events-none absolute inset-0 z-[2] grid place-items-center bg-[#071d31]"
-            exit={{ opacity: 0 }}
-            initial={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
+        <AnimatePresence>
+          {isBusy ? (
             <motion.div
-              animate={{
-                opacity: 1,
-                scale: 1,
-              }}
-              className="flex flex-col items-center gap-4"
-              initial={{
-                opacity: 0,
-                scale: 0.92,
-              }}
-              transition={{ duration: 0.4 }}
+              animate={{ opacity: 1 }}
+              className="pointer-events-none absolute inset-0 z-[2] grid place-items-center bg-[#071d31]"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
             >
-              <div className="relative grid size-16 place-items-center">
-                <span className="absolute inset-0 animate-spin rounded-full border-2 border-white/10 border-t-[#d17c5b]" />
+              <motion.div
+                animate={{
+                  opacity: 1,
+                  scale: 1,
+                }}
+                className="flex flex-col items-center gap-4"
+                initial={{
+                  opacity: 0,
+                  scale: 0.92,
+                }}
+                transition={{ duration: 0.4 }}
+              >
+                <div className="relative grid size-16 place-items-center">
+                  <span className="absolute inset-0 animate-spin rounded-full border-2 border-white/10 border-t-[#d17c5b]" />
 
+                  <Boxes
+                    aria-hidden="true"
+                    className="text-[#d17c5b]"
+                    size={22}
+                    strokeWidth={1.5}
+                  />
+                </div>
+
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/60">
+                  {status === "loading"
+                    ? `Cargando modelo · ${progress}%`
+                    : "Preparando visor"}
+                </p>
+              </motion.div>
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[1] opacity-[0.12]"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(146, 198, 222, 0.3) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(146, 198, 222, 0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: "4rem 4rem",
+          }}
+        />
+
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(circle_at_center,transparent_35%,rgba(3,15,27,0.52)_100%)]"
+        />
+
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="pointer-events-auto inline-flex min-h-12 items-center gap-3 rounded-full border border-white/15 bg-[#071d31]/80 px-4 text-white shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl">
+              <span className="grid size-8 place-items-center rounded-full border border-[#77a8c1]/25 bg-[#77a8c1]/10 text-[#9dc3d5]">
                 <Boxes
                   aria-hidden="true"
-                  className="text-[#d17c5b]"
-                  size={22}
+                  size={15}
                   strokeWidth={1.5}
                 />
+              </span>
+
+              <div>
+                <p className="text-[0.58rem] font-semibold uppercase tracking-[0.15em] text-white">
+                  {modelName}
+                </p>
+
+                <p className="mt-0.5 text-[0.5rem] uppercase tracking-[0.13em] text-white/45">
+                  OpenBIM · {modelFormat}
+                </p>
               </div>
-
-              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-white/60">
-                {status === "loading"
-                  ? `Cargando modelo · ${progress}%`
-                  : "Preparando visor"}
-              </p>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[1] opacity-[0.12]"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(146, 198, 222, 0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(146, 198, 222, 0.3) 1px, transparent 1px)
-          `,
-          backgroundSize: "4rem 4rem",
-        }}
-      />
-
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(circle_at_center,transparent_35%,rgba(3,15,27,0.52)_100%)]"
-      />
-
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="pointer-events-auto inline-flex min-h-12 items-center gap-3 rounded-full border border-white/15 bg-[#071d31]/80 px-4 text-white shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl">
-            <span className="grid size-8 place-items-center rounded-full border border-[#77a8c1]/25 bg-[#77a8c1]/10 text-[#9dc3d5]">
-              <Boxes
-                aria-hidden="true"
-                size={15}
-                strokeWidth={1.5}
-              />
-            </span>
-
-            <div>
-              <p className="text-[0.58rem] font-semibold uppercase tracking-[0.15em] text-white">
-                {modelName}
-              </p>
-
-              <p className="mt-0.5 text-[0.5rem] uppercase tracking-[0.13em] text-white/45">
-                OpenBIM · {modelFormat}
-              </p>
             </div>
-          </div>
 
-          <div className="pointer-events-auto flex items-center gap-2">
-            {visibleMaterials &&
-            visibleMaterials.length > 0 ? (
-              <div
-                ref={materialsPanelRef}
-              >
+            <div className="pointer-events-auto flex items-center gap-2">
+              {visibleMaterials &&
+              visibleMaterials.length > 0 ? (
                 <button
                   aria-expanded={
                     isMaterialsPanelOpen
@@ -2107,199 +2047,9 @@ export function BimViewer({
                     </span>
                   ) : null}
                 </button>
+              ) : null}
 
-                {isMaterialsPanelOpen ? (
-                  <div className="absolute left-0 top-full z-[110] mt-2 max-h-[60svh] w-[min(88vw,20rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:max-h-[32rem] sm:p-4">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
-                        Materiales
-                      </p>
-
-                      <button
-                        aria-label="Cerrar materiales"
-                        className="glass-interactive grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 hover:text-white"
-                        onClick={() =>
-                          setIsMaterialsPanelOpen(
-                            false,
-                          )
-                        }
-                        type="button"
-                      >
-                        <X
-                          aria-hidden="true"
-                          size={15}
-                          strokeWidth={1.8}
-                        />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-                      <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
-                        <button
-                          className={cn(
-                            "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
-                            visibilityMode ===
-                              "ghost"
-                              ? "bg-[#d17c5b] text-white"
-                              : "text-white/55 hover:text-white/80",
-                          )}
-                          onClick={() =>
-                            handleSetVisibilityMode(
-                              "ghost",
-                            )
-                          }
-                          type="button"
-                        >
-                          Transparentar
-                        </button>
-
-                        <button
-                          className={cn(
-                            "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
-                            visibilityMode ===
-                              "hide"
-                              ? "bg-[#d17c5b] text-white"
-                              : "text-white/55 hover:text-white/80",
-                          )}
-                          onClick={() =>
-                            handleSetVisibilityMode(
-                              "hide",
-                            )
-                          }
-                          type="button"
-                        >
-                          Ocultar
-                        </button>
-                      </div>
-
-                      <button
-                        className="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45 hover:text-white/75 disabled:cursor-not-allowed disabled:opacity-30"
-                        disabled={
-                          selectedCategories.size ===
-                            0 &&
-                          selectedMaterialKeys.size ===
-                            0
-                        }
-                        onClick={
-                          handleClearSelection
-                        }
-                        type="button"
-                      >
-                        Limpiar selección
-                      </button>
-                    </div>
-
-                    {visibilityMode ===
-                    "ghost" ? (
-                      <div className="flex items-center gap-3 border-b border-white/10 py-3">
-                        <label
-                          className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45"
-                          htmlFor="ghost-opacity-range-materials"
-                        >
-                          Transparencia
-                        </label>
-
-                        <input
-                          className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#d17c5b]"
-                          id="ghost-opacity-range-materials"
-                          max={1}
-                          min={0}
-                          onChange={(event) =>
-                            handleGhostOpacityChange(
-                              Number(
-                                event.target
-                                  .value,
-                              ),
-                            )
-                          }
-                          step={0.05}
-                          type="range"
-                          value={ghostOpacity}
-                        />
-
-                        <span className="w-9 shrink-0 text-right text-[0.6rem] text-white/55">
-                          {Math.round(
-                            ghostOpacity * 100,
-                          )}
-                          %
-                        </span>
-                      </div>
-                    ) : null}
-
-                    <div className="mt-3 max-h-80 space-y-1 overflow-y-auto pr-1">
-                      {visibleMaterials.map(
-                        (material) => {
-                          const checked =
-                            selectedMaterialKeys.has(
-                              material.key,
-                            );
-
-                          return (
-                            <button
-                              className={cn(
-                                "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
-                                checked
-                                  ? "bg-white/[0.1] text-white"
-                                  : "text-white/70",
-                              )}
-                              key={
-                                material.key
-                              }
-                              onClick={() =>
-                                toggleMaterial(
-                                  material,
-                                )
-                              }
-                              type="button"
-                            >
-                              <span
-                                className={cn(
-                                  "grid size-3.5 shrink-0 place-items-center rounded border",
-                                  checked
-                                    ? "border-[#d17c5b] bg-[#d17c5b]"
-                                    : "border-white/30",
-                                )}
-                              >
-                                {checked ? (
-                                  <Check
-                                    aria-hidden="true"
-                                    className="text-white"
-                                    size={10}
-                                    strokeWidth={3}
-                                  />
-                                ) : null}
-                              </span>
-
-                              <span
-                                aria-hidden="true"
-                                className="size-3 shrink-0 rounded-full border border-white/25"
-                                style={{
-                                  backgroundColor:
-                                    material.colorHex ??
-                                    "#5f91ad",
-                                }}
-                              />
-
-                              <span className="truncate">
-                                {getMaterialDisplayName(
-                                  material,
-                                  materialOverrides,
-                                )}
-                              </span>
-                            </button>
-                          );
-                        },
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            {availableCategories.length > 0 ? (
-              <div
-                ref={propertiesPanelRef}
-              >
+              {availableCategories.length > 0 ? (
                 <button
                   aria-expanded={
                     isPropertiesPanelOpen
@@ -2342,466 +2092,647 @@ export function BimViewer({
                     </span>
                   ) : null}
                 </button>
+              ) : null}
 
-                {isPropertiesPanelOpen ? (
-                  <div className="absolute right-0 top-full z-[110] mt-2 max-h-[60svh] w-[min(88vw,20rem)] overflow-y-auto rounded-2xl border border-white/15 bg-[#071d31]/95 p-5 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.4)] backdrop-blur-2xl sm:max-h-[32rem] sm:p-4">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
-                        Propiedades
-                      </p>
-
-                      <button
-                        aria-label="Cerrar propiedades"
-                        className="glass-interactive grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 hover:text-white"
-                        onClick={() =>
-                          setIsPropertiesPanelOpen(
-                            false,
-                          )
-                        }
-                        type="button"
-                      >
-                        <X
-                          aria-hidden="true"
-                          size={15}
-                          strokeWidth={1.8}
-                        />
-                      </button>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-                      <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
-                        <button
-                          className={cn(
-                            "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
-                            visibilityMode ===
-                              "ghost"
-                              ? "bg-[#d17c5b] text-white"
-                              : "text-white/55 hover:text-white/80",
-                          )}
-                          onClick={() =>
-                            handleSetVisibilityMode(
-                              "ghost",
-                            )
-                          }
-                          type="button"
-                        >
-                          Transparentar
-                        </button>
-
-                        <button
-                          className={cn(
-                            "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
-                            visibilityMode ===
-                              "hide"
-                              ? "bg-[#d17c5b] text-white"
-                              : "text-white/55 hover:text-white/80",
-                          )}
-                          onClick={() =>
-                            handleSetVisibilityMode(
-                              "hide",
-                            )
-                          }
-                          type="button"
-                        >
-                          Ocultar
-                        </button>
-                      </div>
-
-                      <button
-                        className="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45 hover:text-white/75 disabled:cursor-not-allowed disabled:opacity-30"
-                        disabled={
-                          selectedCategories.size ===
-                            0 &&
-                          selectedMaterialKeys.size ===
-                            0
-                        }
-                        onClick={
-                          handleClearSelection
-                        }
-                        type="button"
-                      >
-                        Limpiar selección
-                      </button>
-                    </div>
-
-                    {visibilityMode ===
-                    "ghost" ? (
-                      <div className="flex items-center gap-3 border-b border-white/10 py-3">
-                        <label
-                          className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45"
-                          htmlFor="ghost-opacity-range-properties"
-                        >
-                          Transparencia
-                        </label>
-
-                        <input
-                          className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#d17c5b]"
-                          id="ghost-opacity-range-properties"
-                          max={1}
-                          min={0}
-                          onChange={(event) =>
-                            handleGhostOpacityChange(
-                              Number(
-                                event.target
-                                  .value,
-                              ),
-                            )
-                          }
-                          step={0.05}
-                          type="range"
-                          value={ghostOpacity}
-                        />
-
-                        <span className="w-9 shrink-0 text-right text-[0.6rem] text-white/55">
-                          {Math.round(
-                            ghostOpacity * 100,
-                          )}
-                          %
-                        </span>
-                      </div>
-                    ) : null}
-
-                    <div className="mt-3 max-h-80 space-y-1 overflow-y-auto pr-1">
-                      {availableCategories.map(
-                        (category) => {
-                          const checked =
-                            selectedCategories.has(
-                              category,
-                            );
-
-                          const progressEntry =
-                            categoryProgress?.[
-                              category
-                            ];
-
-                          return (
-                            <button
-                              className={cn(
-                                "group relative flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
-                                checked
-                                  ? "bg-white/[0.1] text-white"
-                                  : "text-white/70",
-                              )}
-                              key={
-                                category
-                              }
-                              onClick={() =>
-                                toggleCategory(
-                                  category,
-                                )
-                              }
-                              type="button"
-                            >
-                              <span
-                                className={cn(
-                                  "grid size-3.5 shrink-0 place-items-center rounded border",
-                                  checked
-                                    ? "border-[#d17c5b] bg-[#d17c5b]"
-                                    : "border-white/30",
-                                )}
-                              >
-                                {checked ? (
-                                  <Check
-                                    aria-hidden="true"
-                                    className="text-white"
-                                    size={10}
-                                    strokeWidth={3}
-                                  />
-                                ) : null}
-                              </span>
-
-                              <span className="truncate">
-                                {category}
-                              </span>
-
-                              {progressEntry ? (
-                                <span
-                                  className="pointer-events-none absolute left-full top-1/2 z-10 ml-2 w-max max-w-[11rem] -translate-y-1/2 rounded-lg border border-white/15 bg-[#0b2434] px-2.5 py-1.5 text-[0.62rem] font-semibold normal-case tracking-normal text-white opacity-0 shadow-[0_0.75rem_2rem_rgb(0_0_0/0.35)] transition-opacity duration-150 group-hover:opacity-100"
-                                  role="status"
-                                >
-                                  Avance de obra:{" "}
-                                  {
-                                    progressEntry.actualPercentage
-                                  }
-                                  %
-                                </span>
-                              ) : null}
-                            </button>
-                          );
-                        },
-                      )}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            <button
-              aria-pressed={
-                isSelectingWalkStart ||
-                cameraMode === "walk"
-              }
-              className={cn(
-                "glass-interactive inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.57rem] font-semibold uppercase tracking-[0.13em] shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40",
-                isSelectingWalkStart ||
+              <button
+                aria-pressed={
+                  isSelectingWalkStart ||
                   cameraMode === "walk"
-                  ? "border-[#d17c5b]/60 bg-[#d17c5b] text-white"
-                  : "border-white/15 bg-[#071d31]/80 text-white",
-              )}
-              disabled={navigationDisabled}
-              onClick={handleWalkButton}
-              type="button"
-            >
-              <Footprints
-                aria-hidden="true"
-                size={16}
-                strokeWidth={1.6}
-              />
-
-              <span className="hidden sm:inline">
-                {cameraMode === "walk"
-                  ? "Salir del paseo"
-                  : "Paseo"}
-              </span>
-            </button>
-
-            <button
-              aria-label="Restaurar vista general"
-              className="glass-interactive grid size-11 place-items-center rounded-full border border-white/15 bg-[#071d31]/80 text-white shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40"
-              disabled={navigationDisabled}
-              onClick={handleResetView}
-              title="Vista general"
-              type="button"
-            >
-              <RotateCcw
-                aria-hidden="true"
-                size={17}
-                strokeWidth={1.6}
-              />
-            </button>
-
-            <button
-              aria-label={
-                isFullscreen
-                  ? "Salir de pantalla completa"
-                  : "Abrir en pantalla completa"
-              }
-              className="glass-interactive grid size-11 place-items-center rounded-full border border-white/15 bg-[#071d31]/80 text-white shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl"
-              onClick={handleFullscreen}
-              type="button"
-            >
-              {isFullscreen ? (
-                <Minimize2
-                  aria-hidden="true"
-                  size={17}
-                  strokeWidth={1.6}
-                />
-              ) : (
-                <Maximize2
-                  aria-hidden="true"
-                  size={17}
-                  strokeWidth={1.6}
-                />
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {isSelectingWalkStart ? (
-        <div className="pointer-events-none absolute left-1/2 top-24 z-20 w-[calc(100%-2rem)] max-w-md -translate-x-1/2">
-          <div className="rounded-2xl border border-[#d17c5b]/40 bg-[#071d31]/90 px-5 py-4 text-center shadow-[0_1.5rem_4rem_rgb(0_0_0/0.35)] backdrop-blur-2xl">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.15em] text-[#d98a69]">
-              Elegir inicio del paseo
-            </p>
-
-            <p className="mt-2 text-xs leading-5 text-white/65">
-              Hacé doble clic sobre el suelo cercano al punto donde querés comenzar.
-            </p>
-
-            {walkSelectionMessage ? (
-              <p className="mt-2 text-xs leading-5 text-[#efad94]">
-                {walkSelectionMessage}
-              </p>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
-
-      {cameraMode === "walk" ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/2 z-10 size-3 -translate-x-1/2 -translate-y-1/2"
-        >
-          <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white/45" />
-          <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/45" />
-        </div>
-      ) : null}
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 sm:p-5">
-        <div className="flex items-end justify-between gap-3">
-          <div
-            aria-live="polite"
-            className={cn(
-              "min-w-0 max-w-md flex-1 rounded-[1.25rem] border px-4 py-3 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.28)] backdrop-blur-2xl sm:px-5 sm:py-4",
-              status === "error"
-                ? "border-red-300/30 bg-red-950/90"
-                : "border-white/15 bg-[#071d31]/80",
-            )}
-          >
-            <div className="flex items-start gap-3">
-              {isBusy ? (
-                <Loader2
-                  aria-hidden="true"
-                  className="mt-0.5 shrink-0 animate-spin text-[#d17c5b]"
-                  size={18}
-                  strokeWidth={1.7}
-                />
-              ) : cameraMode === "walk" ? (
+                }
+                className={cn(
+                  "glass-interactive inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-[0.57rem] font-semibold uppercase tracking-[0.13em] shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40",
+                  isSelectingWalkStart ||
+                    cameraMode === "walk"
+                    ? "border-[#d17c5b]/60 bg-[#d17c5b] text-white"
+                    : "border-white/15 bg-[#071d31]/80 text-white",
+                )}
+                disabled={navigationDisabled}
+                onClick={handleWalkButton}
+                type="button"
+              >
                 <Footprints
                   aria-hidden="true"
-                  className="mt-0.5 shrink-0 text-[#d17c5b]"
-                  size={18}
+                  size={16}
                   strokeWidth={1.6}
                 />
-              ) : (
-                <Boxes
+
+                <span className="hidden sm:inline">
+                  {cameraMode === "walk"
+                    ? "Salir del paseo"
+                    : "Paseo"}
+                </span>
+              </button>
+
+              <button
+                aria-label="Restaurar vista general"
+                className="glass-interactive grid size-11 place-items-center rounded-full border border-white/15 bg-[#071d31]/80 text-white shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={navigationDisabled}
+                onClick={handleResetView}
+                title="Vista general"
+                type="button"
+              >
+                <RotateCcw
                   aria-hidden="true"
-                  className="mt-0.5 shrink-0 text-[#d17c5b]"
-                  size={18}
+                  size={17}
                   strokeWidth={1.6}
                 />
-              )}
+              </button>
 
-              <div className="min-w-0 flex-1">
-                <p className="text-[0.59rem] font-semibold uppercase tracking-[0.14em] text-white">
-                  {cameraMode === "walk" &&
-                  status === "loaded"
-                    ? "Paseo peatonal"
-                    : stage}
-                </p>
-
-                <p className="mt-1.5 text-[0.68rem] leading-5 text-white/55">
-                  {status === "initializing"
-                    ? "Configurando el visor."
-                    : null}
-
-                  {status === "loading"
-                    ? `${modelName} · ${progress}%`
-                    : null}
-
-                  {status === "loaded" &&
-                  cameraMode === "orbit"
-                    ? "Mouse para explorar. Presioná Paseo para elegir un punto de ingreso."
-                    : null}
-
-                  {status === "loaded" &&
-                  cameraMode === "walk"
-                    ? "WASD para caminar. Arrastrá el mouse para mirar. Q/E cambia la altura."
-                    : null}
-
-                  {status === "error"
-                    ? errorMessage
-                    : null}
-                </p>
-
-                {status === "loading" ? (
-                  <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
-                    <div
-                      className="h-full rounded-full bg-[#d17c5b] transition-[width] duration-300"
-                      style={{
-                        width: `${progress}%`,
-                      }}
-                    />
-                  </div>
-                ) : null}
-              </div>
+              <button
+                aria-label={
+                  isFullscreen
+                    ? "Salir de pantalla completa"
+                    : "Abrir en pantalla completa"
+                }
+                className="glass-interactive grid size-11 place-items-center rounded-full border border-white/15 bg-[#071d31]/80 text-white shadow-[0_1rem_3rem_rgb(0_0_0/0.24)] backdrop-blur-2xl"
+                onClick={handleFullscreen}
+                type="button"
+              >
+                {isFullscreen ? (
+                  <Minimize2
+                    aria-hidden="true"
+                    size={17}
+                    strokeWidth={1.6}
+                  />
+                ) : (
+                  <Maximize2
+                    aria-hidden="true"
+                    size={17}
+                    strokeWidth={1.6}
+                  />
+                )}
+              </button>
             </div>
           </div>
+        </div>
 
-          <div className="pointer-events-auto flex shrink-0 items-end gap-2">
-            <div className="hidden flex-col gap-1 rounded-xl border border-white/15 bg-[#071d31]/80 p-1.5 backdrop-blur-2xl sm:flex">
-              <MovementButton
-                action="up"
-                ariaLabel="Subir"
-                disabled={navigationDisabled}
-                onNavigate={handleNavigate}
-              >
-                <ArrowUp
-                  aria-hidden="true"
-                  size={15}
-                />
-              </MovementButton>
+        {isSelectingWalkStart ? (
+          <div className="pointer-events-none absolute left-1/2 top-24 z-20 w-[calc(100%-2rem)] max-w-md -translate-x-1/2">
+            <div className="rounded-2xl border border-[#d17c5b]/40 bg-[#071d31]/90 px-5 py-4 text-center shadow-[0_1.5rem_4rem_rgb(0_0_0/0.35)] backdrop-blur-2xl">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.15em] text-[#d98a69]">
+                Elegir inicio del paseo
+              </p>
 
-              <MovementButton
-                action="down"
-                ariaLabel="Bajar"
-                disabled={navigationDisabled}
-                onNavigate={handleNavigate}
-              >
-                <ArrowDown
-                  aria-hidden="true"
-                  size={15}
-                />
-              </MovementButton>
+              <p className="mt-2 text-xs leading-5 text-white/65">
+                Hacé doble clic sobre el suelo cercano al punto donde querés comenzar.
+              </p>
+
+              {walkSelectionMessage ? (
+                <p className="mt-2 text-xs leading-5 text-[#efad94]">
+                  {walkSelectionMessage}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
+
+        {cameraMode === "walk" ? (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/2 z-10 size-3 -translate-x-1/2 -translate-y-1/2"
+          >
+            <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white/45" />
+            <span className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/45" />
+          </div>
+        ) : null}
+
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 p-4 sm:p-5">
+          <div className="flex items-end justify-between gap-3">
+            <div
+              aria-live="polite"
+              className={cn(
+                "min-w-0 max-w-md flex-1 rounded-[1.25rem] border px-4 py-3 shadow-[0_1.5rem_4rem_rgb(0_0_0/0.28)] backdrop-blur-2xl sm:px-5 sm:py-4",
+                status === "error"
+                  ? "border-red-300/30 bg-red-950/90"
+                  : "border-white/15 bg-[#071d31]/80",
+              )}
+            >
+              <div className="flex items-start gap-3">
+                {isBusy ? (
+                  <Loader2
+                    aria-hidden="true"
+                    className="mt-0.5 shrink-0 animate-spin text-[#d17c5b]"
+                    size={18}
+                    strokeWidth={1.7}
+                  />
+                ) : cameraMode === "walk" ? (
+                  <Footprints
+                    aria-hidden="true"
+                    className="mt-0.5 shrink-0 text-[#d17c5b]"
+                    size={18}
+                    strokeWidth={1.6}
+                  />
+                ) : (
+                  <Boxes
+                    aria-hidden="true"
+                    className="mt-0.5 shrink-0 text-[#d17c5b]"
+                    size={18}
+                    strokeWidth={1.6}
+                  />
+                )}
+
+                <div className="min-w-0 flex-1">
+                  <p className="text-[0.59rem] font-semibold uppercase tracking-[0.14em] text-white">
+                    {cameraMode === "walk" &&
+                    status === "loaded"
+                      ? "Paseo peatonal"
+                      : stage}
+                  </p>
+
+                  <p className="mt-1.5 text-[0.68rem] leading-5 text-white/55">
+                    {status === "initializing"
+                      ? "Configurando el visor."
+                      : null}
+
+                    {status === "loading"
+                      ? `${modelName} · ${progress}%`
+                      : null}
+
+                    {status === "loaded" &&
+                    cameraMode === "orbit"
+                      ? "Mouse para explorar. Presioná Paseo para elegir un punto de ingreso."
+                      : null}
+
+                    {status === "loaded" &&
+                    cameraMode === "walk"
+                      ? "WASD para caminar. Arrastrá el mouse para mirar. Q/E cambia la altura."
+                      : null}
+
+                    {status === "error"
+                      ? errorMessage
+                      : null}
+                  </p>
+
+                  {status === "loading" ? (
+                    <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className="h-full rounded-full bg-[#d17c5b] transition-[width] duration-300"
+                        style={{
+                          width: `${progress}%`,
+                        }}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 rounded-xl border border-white/15 bg-[#071d31]/80 p-1.5 backdrop-blur-2xl">
-              <MovementButton
-                action="forward"
-                ariaLabel="Avanzar"
-                className="col-start-2"
-                disabled={navigationDisabled}
-                onNavigate={handleNavigate}
-              >
-                <ArrowUp
-                  aria-hidden="true"
-                  size={16}
-                />
-              </MovementButton>
+            <div className="pointer-events-auto flex shrink-0 items-end gap-2">
+              <div className="hidden flex-col gap-1 rounded-xl border border-white/15 bg-[#071d31]/80 p-1.5 backdrop-blur-2xl sm:flex">
+                <MovementButton
+                  action="up"
+                  ariaLabel="Subir"
+                  disabled={navigationDisabled}
+                  onNavigate={handleNavigate}
+                >
+                  <ArrowUp
+                    aria-hidden="true"
+                    size={15}
+                  />
+                </MovementButton>
 
-              <MovementButton
-                action="left"
-                ariaLabel="Mover a la izquierda"
-                className="col-start-1 row-start-2"
-                disabled={navigationDisabled}
-                onNavigate={handleNavigate}
-              >
-                <ArrowLeft
-                  aria-hidden="true"
-                  size={16}
-                />
-              </MovementButton>
+                <MovementButton
+                  action="down"
+                  ariaLabel="Bajar"
+                  disabled={navigationDisabled}
+                  onNavigate={handleNavigate}
+                >
+                  <ArrowDown
+                    aria-hidden="true"
+                    size={15}
+                  />
+                </MovementButton>
+              </div>
 
-              <MovementButton
-                action="backward"
-                ariaLabel="Retroceder"
-                className="col-start-2 row-start-2"
-                disabled={navigationDisabled}
-                onNavigate={handleNavigate}
-              >
-                <ArrowDown
-                  aria-hidden="true"
-                  size={16}
-                />
-              </MovementButton>
+              <div className="grid grid-cols-3 gap-1 rounded-xl border border-white/15 bg-[#071d31]/80 p-1.5 backdrop-blur-2xl">
+                <MovementButton
+                  action="forward"
+                  ariaLabel="Avanzar"
+                  className="col-start-2"
+                  disabled={navigationDisabled}
+                  onNavigate={handleNavigate}
+                >
+                  <ArrowUp
+                    aria-hidden="true"
+                    size={16}
+                  />
+                </MovementButton>
 
-              <MovementButton
-                action="right"
-                ariaLabel="Mover a la derecha"
-                className="col-start-3 row-start-2"
-                disabled={navigationDisabled}
-                onNavigate={handleNavigate}
-              >
-                <ArrowRight
-                  aria-hidden="true"
-                  size={16}
-                />
-              </MovementButton>
+                <MovementButton
+                  action="left"
+                  ariaLabel="Mover a la izquierda"
+                  className="col-start-1 row-start-2"
+                  disabled={navigationDisabled}
+                  onNavigate={handleNavigate}
+                >
+                  <ArrowLeft
+                    aria-hidden="true"
+                    size={16}
+                  />
+                </MovementButton>
+
+                <MovementButton
+                  action="backward"
+                  ariaLabel="Retroceder"
+                  className="col-start-2 row-start-2"
+                  disabled={navigationDisabled}
+                  onNavigate={handleNavigate}
+                >
+                  <ArrowDown
+                    aria-hidden="true"
+                    size={16}
+                  />
+                </MovementButton>
+
+                <MovementButton
+                  action="right"
+                  ariaLabel="Mover a la derecha"
+                  className="col-start-3 row-start-2"
+                  disabled={navigationDisabled}
+                  onNavigate={handleNavigate}
+                >
+                  <ArrowRight
+                    aria-hidden="true"
+                    size={16}
+                  />
+                </MovementButton>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {visibleMaterials &&
+      visibleMaterials.length > 0 &&
+      isMaterialsPanelOpen ? (
+        <div className="relative z-[20] flex h-full w-[min(78vw,19rem)] shrink-0 flex-col overflow-hidden border-l border-white/15 bg-[#071d31] p-5 sm:w-80 sm:p-4">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
+              Materiales
+            </p>
+
+            <button
+              aria-label="Cerrar materiales"
+              className="glass-interactive grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 hover:text-white"
+              onClick={() =>
+                setIsMaterialsPanelOpen(
+                  false,
+                )
+              }
+              type="button"
+            >
+              <X
+                aria-hidden="true"
+                size={15}
+                strokeWidth={1.8}
+              />
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
+              <button
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                  visibilityMode ===
+                    "ghost"
+                    ? "bg-[#d17c5b] text-white"
+                    : "text-white/55 hover:text-white/80",
+                )}
+                onClick={() =>
+                  handleSetVisibilityMode(
+                    "ghost",
+                  )
+                }
+                type="button"
+              >
+                Transparentar
+              </button>
+
+              <button
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                  visibilityMode ===
+                    "hide"
+                    ? "bg-[#d17c5b] text-white"
+                    : "text-white/55 hover:text-white/80",
+                )}
+                onClick={() =>
+                  handleSetVisibilityMode(
+                    "hide",
+                  )
+                }
+                type="button"
+              >
+                Ocultar
+              </button>
+            </div>
+
+            <button
+              className="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45 hover:text-white/75 disabled:cursor-not-allowed disabled:opacity-30"
+              disabled={
+                selectedCategories.size ===
+                  0 &&
+                selectedMaterialKeys.size ===
+                  0
+              }
+              onClick={
+                handleClearSelection
+              }
+              type="button"
+            >
+              Limpiar selección
+            </button>
+          </div>
+
+          {visibilityMode === "ghost" ? (
+            <div className="flex items-center gap-3 border-b border-white/10 py-3">
+              <label
+                className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45"
+                htmlFor="ghost-opacity-range-materials"
+              >
+                Transparencia
+              </label>
+
+              <input
+                className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#d17c5b]"
+                id="ghost-opacity-range-materials"
+                max={1}
+                min={0}
+                onChange={(event) =>
+                  handleGhostOpacityChange(
+                    Number(
+                      event.target.value,
+                    ),
+                  )
+                }
+                step={0.05}
+                type="range"
+                value={ghostOpacity}
+              />
+
+              <span className="w-9 shrink-0 text-right text-[0.6rem] text-white/55">
+                {Math.round(
+                  ghostOpacity * 100,
+                )}
+                %
+              </span>
+            </div>
+          ) : null}
+
+          <div className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1">
+            {visibleMaterials.map(
+              (material) => {
+                const checked =
+                  selectedMaterialKeys.has(
+                    material.key,
+                  );
+
+                return (
+                  <button
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
+                      checked
+                        ? "bg-white/[0.1] text-white"
+                        : "text-white/70",
+                    )}
+                    key={material.key}
+                    onClick={() =>
+                      toggleMaterial(
+                        material,
+                      )
+                    }
+                    type="button"
+                  >
+                    <span
+                      className={cn(
+                        "grid size-3.5 shrink-0 place-items-center rounded border",
+                        checked
+                          ? "border-[#d17c5b] bg-[#d17c5b]"
+                          : "border-white/30",
+                      )}
+                    >
+                      {checked ? (
+                        <Check
+                          aria-hidden="true"
+                          className="text-white"
+                          size={10}
+                          strokeWidth={3}
+                        />
+                      ) : null}
+                    </span>
+
+                    <span
+                      aria-hidden="true"
+                      className="size-3 shrink-0 rounded-full border border-white/25"
+                      style={{
+                        backgroundColor:
+                          material.colorHex ??
+                          "#5f91ad",
+                      }}
+                    />
+
+                    <span className="truncate">
+                      {getMaterialDisplayName(
+                        material,
+                        materialOverrides,
+                      )}
+                    </span>
+                  </button>
+                );
+              },
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {availableCategories.length > 0 &&
+      isPropertiesPanelOpen ? (
+        <div className="relative z-[20] flex h-full w-[min(78vw,19rem)] shrink-0 flex-col overflow-hidden border-l border-white/15 bg-[#071d31] p-5 sm:w-80 sm:p-4">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
+              Propiedades
+            </p>
+
+            <button
+              aria-label="Cerrar propiedades"
+              className="glass-interactive grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 hover:text-white"
+              onClick={() =>
+                setIsPropertiesPanelOpen(
+                  false,
+                )
+              }
+              type="button"
+            >
+              <X
+                aria-hidden="true"
+                size={15}
+                strokeWidth={1.8}
+              />
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
+              <button
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                  visibilityMode ===
+                    "ghost"
+                    ? "bg-[#d17c5b] text-white"
+                    : "text-white/55 hover:text-white/80",
+                )}
+                onClick={() =>
+                  handleSetVisibilityMode(
+                    "ghost",
+                  )
+                }
+                type="button"
+              >
+                Transparentar
+              </button>
+
+              <button
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                  visibilityMode ===
+                    "hide"
+                    ? "bg-[#d17c5b] text-white"
+                    : "text-white/55 hover:text-white/80",
+                )}
+                onClick={() =>
+                  handleSetVisibilityMode(
+                    "hide",
+                  )
+                }
+                type="button"
+              >
+                Ocultar
+              </button>
+            </div>
+
+            <button
+              className="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45 hover:text-white/75 disabled:cursor-not-allowed disabled:opacity-30"
+              disabled={
+                selectedCategories.size ===
+                  0 &&
+                selectedMaterialKeys.size ===
+                  0
+              }
+              onClick={
+                handleClearSelection
+              }
+              type="button"
+            >
+              Limpiar selección
+            </button>
+          </div>
+
+          {visibilityMode === "ghost" ? (
+            <div className="flex items-center gap-3 border-b border-white/10 py-3">
+              <label
+                className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45"
+                htmlFor="ghost-opacity-range-properties"
+              >
+                Transparencia
+              </label>
+
+              <input
+                className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#d17c5b]"
+                id="ghost-opacity-range-properties"
+                max={1}
+                min={0}
+                onChange={(event) =>
+                  handleGhostOpacityChange(
+                    Number(
+                      event.target.value,
+                    ),
+                  )
+                }
+                step={0.05}
+                type="range"
+                value={ghostOpacity}
+              />
+
+              <span className="w-9 shrink-0 text-right text-[0.6rem] text-white/55">
+                {Math.round(
+                  ghostOpacity * 100,
+                )}
+                %
+              </span>
+            </div>
+          ) : null}
+
+          <div className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1">
+            {availableCategories.map(
+              (category) => {
+                const checked =
+                  selectedCategories.has(
+                    category,
+                  );
+
+                const progressEntry =
+                  categoryProgress?.[
+                    category
+                  ];
+
+                return (
+                  <button
+                    className={cn(
+                      "group relative flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
+                      checked
+                        ? "bg-white/[0.1] text-white"
+                        : "text-white/70",
+                    )}
+                    key={category}
+                    onClick={() =>
+                      toggleCategory(
+                        category,
+                      )
+                    }
+                    type="button"
+                  >
+                    <span
+                      className={cn(
+                        "grid size-3.5 shrink-0 place-items-center rounded border",
+                        checked
+                          ? "border-[#d17c5b] bg-[#d17c5b]"
+                          : "border-white/30",
+                      )}
+                    >
+                      {checked ? (
+                        <Check
+                          aria-hidden="true"
+                          className="text-white"
+                          size={10}
+                          strokeWidth={3}
+                        />
+                      ) : null}
+                    </span>
+
+                    <span className="truncate">
+                      {category}
+                    </span>
+
+                    {progressEntry ? (
+                      <span
+                        className="pointer-events-none absolute left-full top-1/2 z-10 ml-2 w-max max-w-[11rem] -translate-y-1/2 rounded-lg border border-white/15 bg-[#0b2434] px-2.5 py-1.5 text-[0.62rem] font-semibold normal-case tracking-normal text-white opacity-0 shadow-[0_0.75rem_2rem_rgb(0_0_0/0.35)] transition-opacity duration-150 group-hover:opacity-100"
+                        role="status"
+                      >
+                        Avance de obra:{" "}
+                        {
+                          progressEntry.actualPercentage
+                        }
+                        %
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              },
+            )}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

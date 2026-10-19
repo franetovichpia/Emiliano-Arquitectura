@@ -19,12 +19,12 @@ export function CommunityHeroSection() {
       {/* Rejilla blueprint general */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgb(201_220_227/0.16)_1px,transparent_1px),linear-gradient(90deg,rgb(201_220_227/0.16)_1px,transparent_1px)] [background-size:56px_56px]"
+        className="absolute inset-0 opacity-25 [background-image:linear-gradient(rgb(205_224_207/0.16)_1px,transparent_1px),linear-gradient(90deg,rgb(205_224_207/0.16)_1px,transparent_1px)] [background-size:56px_56px]"
       />
 
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(circle_at_78%_30%,rgb(50_123_158/0.34),transparent_34%),linear-gradient(115deg,rgb(6_31_47/0.96)_18%,rgb(6_31_47/0.68)_58%,rgb(6_31_47/0.85)_100%)]"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_78%_30%,rgb(68_138_99/0.34),transparent_34%),linear-gradient(115deg,rgb(9_28_20/0.96)_18%,rgb(9_28_20/0.68)_58%,rgb(9_28_20/0.85)_100%)]"
       />
 
       <Container className="relative z-10 grid min-h-[88svh] grid-cols-1 items-center gap-12 pb-16 pt-32 lg:grid-cols-12 lg:gap-12 lg:pb-20 lg:pt-36">
@@ -112,7 +112,7 @@ export function CommunityHeroSection() {
           delay={0.16}
           distance={28}
         >
-          <div className="relative min-h-[23rem] overflow-hidden rounded-[1.5rem] border border-blueprint-line/20 bg-[#0b3550]/75 shadow-[0_2rem_6rem_rgb(0_0_0/0.24)] backdrop-blur-xl sm:min-h-[29rem]">
+          <div className="relative min-h-[23rem] overflow-hidden rounded-[1.5rem] border border-blueprint-line/20 bg-[#15291d]/75 shadow-[0_2rem_6rem_rgb(0_0_0/0.24)] backdrop-blur-xl sm:min-h-[29rem]">
             <IntegrativeBlueprint />
 
             <div

@@ -23,7 +23,7 @@ export function IntegrativeBlueprint({
           <path
             d="M38 0H0V38"
             opacity="0.12"
-            stroke="#c9dce3"
+            stroke="#c7dcc9"
             strokeWidth="0.8"
           />
         </pattern>
@@ -43,7 +43,7 @@ export function IntegrativeBlueprint({
           <path
             d="M152 0H0V152"
             opacity="0.16"
-            stroke="#dce9ee"
+            stroke="#dcebe0"
             strokeWidth="1"
           />
         </pattern>
@@ -57,13 +57,13 @@ export function IntegrativeBlueprint({
         >
           <stop
             offset="0"
-            stopColor="#dce9ee"
+            stopColor="#dcebe0"
             stopOpacity="0.72"
           />
 
           <stop
             offset="1"
-            stopColor="#91a88c"
+            stopColor="#8aa8c0"
             stopOpacity="0.3"
           />
         </linearGradient>
@@ -78,7 +78,7 @@ export function IntegrativeBlueprint({
       {/* Líneas de perspectiva */}
       <g
         opacity="0.2"
-        stroke="#dce9ee"
+        stroke="#dcebe0"
         strokeWidth="1"
       >
         <path d="M40 690L600 105" />
@@ -115,7 +115,7 @@ export function IntegrativeBlueprint({
       {/* Ventanas y estructura */}
       <g
         opacity="0.38"
-        stroke="#dce9ee"
+        stroke="#dcebe0"
         strokeWidth="1"
       >
         <path d="M320 301V365" />
@@ -161,9 +161,9 @@ export function IntegrativeBlueprint({
         />
 
         <g
-          fill="#91a88c"
+          fill="#8aa8c0"
           fillOpacity="0.12"
-          stroke="#a9bba3"
+          stroke="#a7bdc9"
           strokeWidth="1.5"
         >
           <circle
@@ -203,9 +203,9 @@ export function IntegrativeBlueprint({
         />
 
         <g
-          fill="#91a88c"
+          fill="#8aa8c0"
           fillOpacity="0.12"
-          stroke="#a9bba3"
+          stroke="#a7bdc9"
           strokeWidth="1.5"
         >
           <circle
@@ -237,7 +237,7 @@ export function IntegrativeBlueprint({
       {/* Terreno */}
       <g
         opacity="0.38"
-        stroke="#a9bba3"
+        stroke="#a7bdc9"
         strokeWidth="1.2"
       >
         <path d="M40 647C192 616 310 642 452 631C626 616 710 647 874 630C1011 616 1104 630 1180 616" />
