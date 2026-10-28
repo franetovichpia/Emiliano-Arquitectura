@@ -198,7 +198,7 @@ export function AboutSection() {
                     delay={0.07 + index * 0.07}
                     key={principle.title}
                   >
-                    <article className="glass-surface glass-interactive group flex h-full min-h-64 flex-col rounded-[1.5rem] p-6 sm:p-7">
+                    <article className="glass-surface flex h-full min-h-64 flex-col rounded-[1.5rem] p-6 sm:p-7">
                       <div className="flex items-start justify-between">
                         <div className="grid size-10 place-items-center rounded-full border border-forest-deep/15 bg-white/30 text-terracotta">
                           <Icon
