@@ -4,8 +4,14 @@ import { ArrowUpRight } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 import { ProjectCarousel } from "@/components/projects/project-carousel";
 import { Container } from "@/app/container";
-import { listPublicProjects } from "@/lib/db/collections";
-import { toPortfolioProject } from "@/lib/portfolio-project-adapter";
+import {
+  listProjectIdsWithConstructionProgress,
+  listPublicProjects,
+} from "@/lib/db/collections";
+import {
+  projectHasFiveD,
+  toPortfolioProject,
+} from "@/lib/portfolio-project-adapter";
 
 export async function ProfessionalProjectsSection() {
   const [portfolioProjects, newProjects] =
@@ -14,11 +20,30 @@ export async function ProfessionalProjectsSection() {
       listPublicProjects("nuevos-proyectos"),
     ]);
 
-  const projects = [
+  const allProjects = [
     ...portfolioProjects,
     ...newProjects,
-  ].map((project, index) =>
-    toPortfolioProject(project, index),
+  ];
+
+  const projectIdsWithProgress =
+    await listProjectIdsWithConstructionProgress(
+      allProjects.map((project) =>
+        project._id.toString(),
+      ),
+    );
+
+  const projects = allProjects.map(
+    (project, index) =>
+      toPortfolioProject(
+        project,
+        index,
+        projectHasFiveD(
+          project,
+          projectIdsWithProgress.has(
+            project._id.toString(),
+          ),
+        ),
+      ),
   );
 
   return (

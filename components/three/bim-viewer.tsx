@@ -1910,6 +1910,190 @@ export function BimViewer({
       role="region"
       tabIndex={0}
     >
+      {visibleMaterials &&
+      visibleMaterials.length > 0 &&
+      isMaterialsPanelOpen ? (
+        <div className="relative z-[20] flex h-full w-[min(78vw,19rem)] shrink-0 flex-col overflow-hidden border-r border-white/15 bg-[#071d31] p-5 sm:w-80 sm:p-4">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
+              Materiales
+            </p>
+
+            <button
+              aria-label="Cerrar materiales"
+              className="glass-interactive grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 hover:text-white"
+              onClick={() =>
+                setIsMaterialsPanelOpen(
+                  false,
+                )
+              }
+              type="button"
+            >
+              <X
+                aria-hidden="true"
+                size={15}
+                strokeWidth={1.8}
+              />
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
+              <button
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                  visibilityMode ===
+                    "ghost"
+                    ? "bg-[#d17c5b] text-white"
+                    : "text-white/55 hover:text-white/80",
+                )}
+                onClick={() =>
+                  handleSetVisibilityMode(
+                    "ghost",
+                  )
+                }
+                type="button"
+              >
+                Transparentar
+              </button>
+
+              <button
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
+                  visibilityMode ===
+                    "hide"
+                    ? "bg-[#d17c5b] text-white"
+                    : "text-white/55 hover:text-white/80",
+                )}
+                onClick={() =>
+                  handleSetVisibilityMode(
+                    "hide",
+                  )
+                }
+                type="button"
+              >
+                Ocultar
+              </button>
+            </div>
+
+            <button
+              className="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45 hover:text-white/75 disabled:cursor-not-allowed disabled:opacity-30"
+              disabled={
+                selectedCategories.size ===
+                  0 &&
+                selectedMaterialKeys.size ===
+                  0
+              }
+              onClick={
+                handleClearSelection
+              }
+              type="button"
+            >
+              Limpiar selección
+            </button>
+          </div>
+
+          {visibilityMode === "ghost" ? (
+            <div className="flex items-center gap-3 border-b border-white/10 py-3">
+              <label
+                className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45"
+                htmlFor="ghost-opacity-range-materials"
+              >
+                Transparencia
+              </label>
+
+              <input
+                className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#d17c5b]"
+                id="ghost-opacity-range-materials"
+                max={1}
+                min={0}
+                onChange={(event) =>
+                  handleGhostOpacityChange(
+                    Number(
+                      event.target.value,
+                    ),
+                  )
+                }
+                step={0.05}
+                type="range"
+                value={ghostOpacity}
+              />
+
+              <span className="w-9 shrink-0 text-right text-[0.6rem] text-white/55">
+                {Math.round(
+                  ghostOpacity * 100,
+                )}
+                %
+              </span>
+            </div>
+          ) : null}
+
+          <div className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1">
+            {visibleMaterials.map(
+              (material) => {
+                const checked =
+                  selectedMaterialKeys.has(
+                    material.key,
+                  );
+
+                return (
+                  <button
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
+                      checked
+                        ? "bg-white/[0.1] text-white"
+                        : "text-white/70",
+                    )}
+                    key={material.key}
+                    onClick={() =>
+                      toggleMaterial(
+                        material,
+                      )
+                    }
+                    type="button"
+                  >
+                    <span
+                      className={cn(
+                        "grid size-3.5 shrink-0 place-items-center rounded border",
+                        checked
+                          ? "border-[#d17c5b] bg-[#d17c5b]"
+                          : "border-white/30",
+                      )}
+                    >
+                      {checked ? (
+                        <Check
+                          aria-hidden="true"
+                          className="text-white"
+                          size={10}
+                          strokeWidth={3}
+                        />
+                      ) : null}
+                    </span>
+
+                    <span
+                      aria-hidden="true"
+                      className="size-3 shrink-0 rounded-full border border-white/25"
+                      style={{
+                        backgroundColor:
+                          material.colorHex ??
+                          "#5f91ad",
+                      }}
+                    />
+
+                    <span className="truncate">
+                      {getMaterialDisplayName(
+                        material,
+                        materialOverrides,
+                      )}
+                    </span>
+                  </button>
+                );
+              },
+            )}
+          </div>
+        </div>
+      ) : null}
+
       <div className="relative min-w-0 flex-1 overflow-hidden">
         <div
           className={cn(
@@ -2361,190 +2545,6 @@ export function BimViewer({
           </div>
         </div>
       </div>
-
-      {visibleMaterials &&
-      visibleMaterials.length > 0 &&
-      isMaterialsPanelOpen ? (
-        <div className="relative z-[20] flex h-full w-[min(78vw,19rem)] shrink-0 flex-col overflow-hidden border-l border-white/15 bg-[#071d31] p-5 sm:w-80 sm:p-4">
-          <div className="mb-3 flex items-center justify-between gap-2">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.14em] text-white/60">
-              Materiales
-            </p>
-
-            <button
-              aria-label="Cerrar materiales"
-              className="glass-interactive grid size-8 shrink-0 place-items-center rounded-full border border-white/15 bg-white/[0.04] text-white/70 hover:text-white"
-              onClick={() =>
-                setIsMaterialsPanelOpen(
-                  false,
-                )
-              }
-              type="button"
-            >
-              <X
-                aria-hidden="true"
-                size={15}
-                strokeWidth={1.8}
-              />
-            </button>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-            <div className="flex gap-1 rounded-full border border-white/15 bg-white/[0.03] p-1">
-              <button
-                className={cn(
-                  "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
-                  visibilityMode ===
-                    "ghost"
-                    ? "bg-[#d17c5b] text-white"
-                    : "text-white/55 hover:text-white/80",
-                )}
-                onClick={() =>
-                  handleSetVisibilityMode(
-                    "ghost",
-                  )
-                }
-                type="button"
-              >
-                Transparentar
-              </button>
-
-              <button
-                className={cn(
-                  "rounded-full px-3 py-1.5 text-[0.58rem] font-semibold uppercase tracking-[0.08em]",
-                  visibilityMode ===
-                    "hide"
-                    ? "bg-[#d17c5b] text-white"
-                    : "text-white/55 hover:text-white/80",
-                )}
-                onClick={() =>
-                  handleSetVisibilityMode(
-                    "hide",
-                  )
-                }
-                type="button"
-              >
-                Ocultar
-              </button>
-            </div>
-
-            <button
-              className="text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45 hover:text-white/75 disabled:cursor-not-allowed disabled:opacity-30"
-              disabled={
-                selectedCategories.size ===
-                  0 &&
-                selectedMaterialKeys.size ===
-                  0
-              }
-              onClick={
-                handleClearSelection
-              }
-              type="button"
-            >
-              Limpiar selección
-            </button>
-          </div>
-
-          {visibilityMode === "ghost" ? (
-            <div className="flex items-center gap-3 border-b border-white/10 py-3">
-              <label
-                className="shrink-0 text-[0.58rem] font-semibold uppercase tracking-[0.1em] text-white/45"
-                htmlFor="ghost-opacity-range-materials"
-              >
-                Transparencia
-              </label>
-
-              <input
-                className="h-1 flex-1 cursor-pointer appearance-none rounded-full bg-white/15 accent-[#d17c5b]"
-                id="ghost-opacity-range-materials"
-                max={1}
-                min={0}
-                onChange={(event) =>
-                  handleGhostOpacityChange(
-                    Number(
-                      event.target.value,
-                    ),
-                  )
-                }
-                step={0.05}
-                type="range"
-                value={ghostOpacity}
-              />
-
-              <span className="w-9 shrink-0 text-right text-[0.6rem] text-white/55">
-                {Math.round(
-                  ghostOpacity * 100,
-                )}
-                %
-              </span>
-            </div>
-          ) : null}
-
-          <div className="mt-3 flex-1 space-y-1 overflow-y-auto pr-1">
-            {visibleMaterials.map(
-              (material) => {
-                const checked =
-                  selectedMaterialKeys.has(
-                    material.key,
-                  );
-
-                return (
-                  <button
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs hover:bg-white/[0.08]",
-                      checked
-                        ? "bg-white/[0.1] text-white"
-                        : "text-white/70",
-                    )}
-                    key={material.key}
-                    onClick={() =>
-                      toggleMaterial(
-                        material,
-                      )
-                    }
-                    type="button"
-                  >
-                    <span
-                      className={cn(
-                        "grid size-3.5 shrink-0 place-items-center rounded border",
-                        checked
-                          ? "border-[#d17c5b] bg-[#d17c5b]"
-                          : "border-white/30",
-                      )}
-                    >
-                      {checked ? (
-                        <Check
-                          aria-hidden="true"
-                          className="text-white"
-                          size={10}
-                          strokeWidth={3}
-                        />
-                      ) : null}
-                    </span>
-
-                    <span
-                      aria-hidden="true"
-                      className="size-3 shrink-0 rounded-full border border-white/25"
-                      style={{
-                        backgroundColor:
-                          material.colorHex ??
-                          "#5f91ad",
-                      }}
-                    />
-
-                    <span className="truncate">
-                      {getMaterialDisplayName(
-                        material,
-                        materialOverrides,
-                      )}
-                    </span>
-                  </button>
-                );
-              },
-            )}
-          </div>
-        </div>
-      ) : null}
 
       {availableCategories.length > 0 &&
       isPropertiesPanelOpen ? (

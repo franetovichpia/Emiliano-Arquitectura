@@ -28,6 +28,27 @@ const zodiacLabels: Record<string, string> = {
   piscis: "Piscis",
 };
 
+/*
+ * Un proyecto "tiene 5D" cuando ya existe avance de obra
+ * cargado: por categorías del modelo BIM (progressSource
+ * "bim-categorias") o por etapas manuales (se le pasa si
+ * existen, ya que requiere una consulta aparte).
+ */
+export function projectHasFiveD(
+  project: WithId<Project>,
+  hasManualProgress: boolean,
+): boolean {
+  if (project.progressSource === "bim-categorias") {
+    return (
+      Object.keys(
+        project.bimModel?.categoryProgress ?? {},
+      ).length > 0
+    );
+  }
+
+  return hasManualProgress;
+}
+
 export function toPortfolioProject(
   project: WithId<Project>,
   index: number,

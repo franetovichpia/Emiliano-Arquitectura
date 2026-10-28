@@ -571,6 +571,29 @@ export async function listConstructionProgress(
     .toArray();
 }
 
+/*
+ * Para listados con varios proyectos a la vez (carrusel,
+ * grilla de "todos los proyectos"), evita una consulta
+ * por proyecto: devuelve el set de projectId que tienen
+ * al menos una etapa de avance manual cargada.
+ */
+export async function listProjectIdsWithConstructionProgress(
+  projectIds: readonly string[],
+): Promise<Set<string>> {
+  if (projectIds.length === 0) {
+    return new Set();
+  }
+
+  const progress = await getBimConstructionProgressCollection();
+
+  const idsWithProgress = await progress.distinct(
+    "projectId",
+    { projectId: { $in: [...projectIds] } },
+  );
+
+  return new Set(idsWithProgress);
+}
+
 export async function deleteConstructionProgressEntry(
   entryId: string,
 ): Promise<void> {

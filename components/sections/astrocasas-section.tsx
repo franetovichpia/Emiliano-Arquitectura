@@ -4,17 +4,39 @@ import { ArrowUpRight } from "lucide-react";
 import { Reveal } from "@/components/motion/reveal";
 import { AstrocasasWall } from "@/components/projects/astrocasas-wall";
 import { Container } from "@/app/container";
-import { listPublicProjects } from "@/lib/db/collections";
-import { toPortfolioProject } from "@/lib/portfolio-project-adapter";
+import {
+  listProjectIdsWithConstructionProgress,
+  listPublicProjects,
+} from "@/lib/db/collections";
+import {
+  projectHasFiveD,
+  toPortfolioProject,
+} from "@/lib/portfolio-project-adapter";
 
 export async function AstrocasasSection() {
   const astrocasasProjects = await listPublicProjects(
     "astrocasas",
   );
 
+  const projectIdsWithProgress =
+    await listProjectIdsWithConstructionProgress(
+      astrocasasProjects.map((project) =>
+        project._id.toString(),
+      ),
+    );
+
   const projects = astrocasasProjects.map(
     (project, index) =>
-      toPortfolioProject(project, index),
+      toPortfolioProject(
+        project,
+        index,
+        projectHasFiveD(
+          project,
+          projectIdsWithProgress.has(
+            project._id.toString(),
+          ),
+        ),
+      ),
   );
 
   return (

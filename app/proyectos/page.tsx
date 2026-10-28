@@ -5,10 +5,13 @@ import { ArrowLeft } from "lucide-react";
 import { Container } from "@/app/container";
 import { ProjectCardsGrid } from "@/components/projects/project-cards-grid";
 import {
-  listConstructionProgress,
+  listProjectIdsWithConstructionProgress,
   listPublicProjects,
 } from "@/lib/db/collections";
-import { toPortfolioProject } from "@/lib/portfolio-project-adapter";
+import {
+  projectHasFiveD,
+  toPortfolioProject,
+} from "@/lib/portfolio-project-adapter";
 
 export const metadata: Metadata = {
   title: "Todos los proyectos | Emiliano Gabriel Rossotti",
@@ -54,20 +57,24 @@ export default async function AllProjectsPage({
       )
     : rawProjects;
 
-  const progressEntries = await Promise.all(
-    projects.map((project) =>
-      listConstructionProgress(
+  const projectIdsWithProgress =
+    await listProjectIdsWithConstructionProgress(
+      projects.map((project) =>
         project._id.toString(),
       ),
-    ),
-  );
+    );
 
   const portfolioProjects = projects.map(
     (project, index) =>
       toPortfolioProject(
         project,
         index,
-        progressEntries[index].length > 0,
+        projectHasFiveD(
+          project,
+          projectIdsWithProgress.has(
+            project._id.toString(),
+          ),
+        ),
       ),
   );
 
