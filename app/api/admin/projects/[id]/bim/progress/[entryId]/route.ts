@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 
 import { requireAdminSession } from "@/lib/auth/session";
@@ -6,6 +5,7 @@ import {
   deleteConstructionProgressEntry,
   getAdminProjectById,
 } from "@/lib/db/collections";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 
 type RouteContext = {
   params: Promise<{ id: string; entryId: string }>;
@@ -28,15 +28,10 @@ export async function DELETE(
 
   await deleteConstructionProgressEntry(entryId);
 
-  try {
-    const project = await getAdminProjectById(id);
+  const project = await getAdminProjectById(id);
 
-    if (project) {
-      revalidatePath(`/modelos/${project.slug}`);
-    }
-  } catch {
-    // La etapa ya se eliminó; si falla la
-    // revalidación no debe tirar abajo el borrado.
+  if (project) {
+    revalidateProjectPages(project.slug);
   }
 
   return NextResponse.json({ ok: true });

@@ -2,8 +2,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
-import { updateProjectMaterialOverrides } from "@/lib/db/collections";
+import {
+  getAdminProjectById,
+  updateProjectMaterialOverrides,
+} from "@/lib/db/collections";
 import { materialFinishSchema } from "@/lib/db/schemas";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 
 const updateOverridesSchema = z.object({
   overrides: z.record(z.string(), materialFinishSchema),
@@ -43,6 +47,12 @@ export async function PATCH(
     id,
     body.data.overrides,
   );
+
+  const project = await getAdminProjectById(id);
+
+  if (project) {
+    revalidateProjectPages(project.slug);
+  }
 
   return NextResponse.json({ ok: true });
 }

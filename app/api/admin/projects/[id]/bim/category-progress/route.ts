@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -8,6 +7,7 @@ import {
   updateProjectCategoryProgress,
 } from "@/lib/db/collections";
 import { categoryProgressEntrySchema } from "@/lib/db/schemas";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 
 const updateCategoryProgressSchema = z.object({
   categoryProgress: z.record(
@@ -51,15 +51,10 @@ export async function PATCH(
     body.data.categoryProgress,
   );
 
-  try {
-    const project = await getAdminProjectById(id);
+  const project = await getAdminProjectById(id);
 
-    if (project) {
-      revalidatePath(`/modelos/${project.slug}`);
-    }
-  } catch {
-    // El avance ya se guardó; si falla la
-    // revalidación no debe tirar abajo el guardado.
+  if (project) {
+    revalidateProjectPages(project.slug);
   }
 
   return NextResponse.json({ ok: true });

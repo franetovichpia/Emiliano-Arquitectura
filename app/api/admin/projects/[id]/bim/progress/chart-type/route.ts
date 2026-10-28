@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -8,6 +7,7 @@ import {
   setProjectProgressChartType,
 } from "@/lib/db/collections";
 import { progressChartTypeSchema } from "@/lib/db/schemas";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 
 const updateChartTypeSchema = z.object({
   chartType: progressChartTypeSchema,
@@ -48,15 +48,10 @@ export async function PATCH(
     body.data.chartType,
   );
 
-  try {
-    const project = await getAdminProjectById(id);
+  const project = await getAdminProjectById(id);
 
-    if (project) {
-      revalidatePath(`/modelos/${project.slug}`);
-    }
-  } catch {
-    // El tipo de gráfico ya se guardó; si falla la
-    // revalidación no debe tirar abajo el guardado.
+  if (project) {
+    revalidateProjectPages(project.slug);
   }
 
   return NextResponse.json({ ok: true });

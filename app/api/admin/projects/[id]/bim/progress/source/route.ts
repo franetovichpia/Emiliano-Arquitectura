@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -8,6 +7,7 @@ import {
   setProjectProgressSource,
 } from "@/lib/db/collections";
 import { progressSourceSchema } from "@/lib/db/schemas";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 
 const updateSourceSchema = z.object({
   source: progressSourceSchema,
@@ -48,15 +48,10 @@ export async function PATCH(
     body.data.source,
   );
 
-  try {
-    const project = await getAdminProjectById(id);
+  const project = await getAdminProjectById(id);
 
-    if (project) {
-      revalidatePath(`/modelos/${project.slug}`);
-    }
-  } catch {
-    // El origen ya se guardó; si falla la
-    // revalidación no debe tirar abajo el guardado.
+  if (project) {
+    revalidateProjectPages(project.slug);
   }
 
   return NextResponse.json({ ok: true });

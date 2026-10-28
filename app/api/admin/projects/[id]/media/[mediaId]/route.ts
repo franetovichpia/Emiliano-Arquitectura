@@ -5,6 +5,7 @@ import {
   getAdminProjectById,
   removeProjectMedia,
 } from "@/lib/db/collections";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 import { deleteObject } from "@/lib/storage/r2-client";
 
 type RouteContext = {
@@ -42,6 +43,10 @@ export async function DELETE(
   }
 
   await removeProjectMedia(id, mediaId);
+
+  if (project) {
+    revalidateProjectPages(project.slug);
+  }
 
   return NextResponse.json({ ok: true });
 }

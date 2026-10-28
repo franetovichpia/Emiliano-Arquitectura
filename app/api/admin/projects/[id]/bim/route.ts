@@ -1,4 +1,3 @@
-import { revalidatePath } from "next/cache";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -12,6 +11,7 @@ import {
   bimModelFormatSchema,
   materialFinishSchema,
 } from "@/lib/db/schemas";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 import { deleteObject } from "@/lib/storage/r2-client";
 
 const saveBimModelSchema = z.object({
@@ -65,15 +65,10 @@ export async function POST(
 
   await setProjectBimModel(id, body.data);
 
-  try {
-    const savedProject = await getAdminProjectById(id);
+  const savedProject = await getAdminProjectById(id);
 
-    if (savedProject) {
-      revalidatePath(`/modelos/${savedProject.slug}`);
-    }
-  } catch {
-    // El modelo ya se guardó; si falla la
-    // revalidación no debe tirar abajo el guardado.
+  if (savedProject) {
+    revalidateProjectPages(savedProject.slug);
   }
 
   return NextResponse.json({ ok: true });
@@ -111,13 +106,8 @@ export async function DELETE(
 
   await removeProjectBimModel(id);
 
-  try {
-    if (project) {
-      revalidatePath(`/modelos/${project.slug}`);
-    }
-  } catch {
-    // El modelo ya se eliminó; si falla la
-    // revalidación no debe tirar abajo el borrado.
+  if (project) {
+    revalidateProjectPages(project.slug);
   }
 
   return NextResponse.json({ ok: true });

@@ -5,7 +5,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
-import { addProjectMedia } from "@/lib/db/collections";
+import {
+  addProjectMedia,
+  getAdminProjectById,
+} from "@/lib/db/collections";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 import { r2Buckets, r2Client } from "@/lib/storage/r2-client";
 
 const bodySchema = z.object({
@@ -125,6 +129,12 @@ export async function POST(
     mimeType: contentType,
     createdAt: new Date(),
   });
+
+  const project = await getAdminProjectById(id);
+
+  if (project) {
+    revalidateProjectPages(project.slug);
+  }
 
   return NextResponse.json({ ok: true });
 }

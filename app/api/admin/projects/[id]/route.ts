@@ -3,12 +3,14 @@ import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
 import {
+  getAdminProjectById,
   isProjectSlugTaken,
   updateProjectInfo,
   updateProjectStatus,
   updateProjectTitleAndSlug,
 } from "@/lib/db/collections";
 import { projectStatusSchema } from "@/lib/db/schemas";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 
 const patchSchema = z.object({
   status: projectStatusSchema.optional(),
@@ -112,6 +114,14 @@ export async function PATCH(
       externalLink:
         info.externalLink || undefined,
     });
+  }
+
+  const updatedProject = await getAdminProjectById(
+    id,
+  );
+
+  if (updatedProject) {
+    revalidateProjectPages(updatedProject.slug);
   }
 
   return NextResponse.json({ ok: true });

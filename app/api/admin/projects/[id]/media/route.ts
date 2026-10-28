@@ -4,8 +4,12 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireAdminSession } from "@/lib/auth/session";
-import { addProjectMedia } from "@/lib/db/collections";
+import {
+  addProjectMedia,
+  getAdminProjectById,
+} from "@/lib/db/collections";
 import { mediaTypeSchema } from "@/lib/db/schemas";
+import { revalidateProjectPages } from "@/lib/revalidate-project";
 
 const addMediaSchema = z.object({
   mediaType: mediaTypeSchema,
@@ -55,6 +59,12 @@ export async function POST(
     mimeType: body.data.mimeType,
     createdAt: new Date(),
   });
+
+  const project = await getAdminProjectById(id);
+
+  if (project) {
+    revalidateProjectPages(project.slug);
+  }
 
   return NextResponse.json({ ok: true });
 }
