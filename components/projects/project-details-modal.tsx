@@ -345,10 +345,10 @@ export function ProjectDetailsModal({
                     </Link>
                   ) : null}
 
-                  {project.bimSlug && project.has5D ? (
+                  {project.has5D ? (
                     <Link
                       className="group inline-flex min-h-11 items-center gap-3 rounded-full border border-sage/40 bg-sage/15 px-5 text-[0.6rem] font-semibold uppercase tracking-[0.15em] text-forest-deep transition hover:-translate-y-0.5 hover:bg-sage/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sage focus-visible:ring-offset-4"
-                      href={`/modelos/${project.bimSlug}#avance-obra`}
+                      href={`/modelos/${project.slug}#avance-obra`}
                     >
                       <LineChart
                         aria-hidden="true"

@@ -13,7 +13,7 @@ import { Container } from "@/app/container";
 import {
   getPublicProjectBySlug,
   listConstructionProgress,
-  listPublicBimProjects,
+  listPublicModelPageProjects,
 } from "@/lib/db/collections";
 import { getPublicUrl } from "@/lib/storage/r2-client";
 import { formatFileSize } from "@/utils/format";
@@ -34,7 +34,7 @@ type ModelViewerPageProps = {
 };
 
 export async function generateStaticParams() {
-  const projects = await listPublicBimProjects();
+  const projects = await listPublicModelPageProjects();
 
   return projects.map((project) => ({
     slug: project.slug,
@@ -47,15 +47,19 @@ export async function generateMetadata({
   const { slug } = await params;
   const project = await getPublicProjectBySlug(slug);
 
-  if (!project || !project.hasIfc || !project.bimModel) {
+  if (!project) {
     return {
-      title: "Modelo no disponible",
+      title: "Proyecto no disponible",
     };
   }
 
   return {
-    title: `${project.title} — Modelo 3D`,
-    description: `Visualización OpenBIM del modelo ${project.title}.`,
+    title: project.hasIfc
+      ? `${project.title} — Modelo 3D`
+      : `${project.title} — Avance de obra`,
+    description: project.hasIfc
+      ? `Visualización OpenBIM del modelo ${project.title}.`
+      : `Avance de obra del proyecto ${project.title}.`,
   };
 }
 
@@ -65,21 +69,29 @@ export default async function ModelViewerPage({
   const { slug } = await params;
   const project = await getPublicProjectBySlug(slug);
 
-  if (!project || !project.hasIfc || !project.bimModel) {
+  if (!project) {
     notFound();
   }
 
   const { bimModel } = project;
 
-  const storageKey =
-    bimModel.ifcStorageKey ?? bimModel.fragStorageKey;
+  const hasModel = Boolean(
+    project.hasIfc &&
+      bimModel &&
+      (bimModel.ifcStorageKey ?? bimModel.fragStorageKey),
+  );
 
-  if (!storageKey) {
-    notFound();
-  }
+  const modelUrl = hasModel
+    ? getPublicUrl(
+        "bim",
+        (bimModel?.ifcStorageKey ??
+          bimModel?.fragStorageKey) as string,
+      )
+    : undefined;
 
-  const modelUrl = getPublicUrl("bim", storageKey);
-  const modelSize = formatFileSize(bimModel.fileSizeBytes);
+  const modelSize = hasModel
+    ? formatFileSize(bimModel?.fileSizeBytes)
+    : undefined;
 
   const manualProgressEntries =
     await listConstructionProgress(
@@ -87,7 +99,7 @@ export default async function ModelViewerPage({
     );
 
   const categoryProgressEntries = Object.entries(
-    bimModel.categoryProgress ?? {},
+    bimModel?.categoryProgress ?? {},
   ).map(([category, entry]) => ({
     id: category,
     stageName: category,
@@ -109,6 +121,10 @@ export default async function ModelViewerPage({
           paidPercentage: entry.paidPercentage,
           notes: entry.notes,
         }));
+
+  if (!hasModel && progressEntries.length === 0) {
+    notFound();
+  }
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#071d31] text-[#f7f2e8]">
@@ -165,39 +181,43 @@ export default async function ModelViewerPage({
             </h1>
           </div>
 
-          <div className="flex flex-wrap gap-2 lg:col-span-4 lg:justify-end">
-            <div className="inline-flex min-h-11 items-center gap-3 rounded-full border border-white/15 bg-white/[0.07] px-4 backdrop-blur-xl">
-              <Boxes
-                aria-hidden="true"
-                className="text-[#d17c5b]"
-                size={17}
-                strokeWidth={1.5}
-              />
+          {hasModel ? (
+            <div className="flex flex-wrap gap-2 lg:col-span-4 lg:justify-end">
+              <div className="inline-flex min-h-11 items-center gap-3 rounded-full border border-white/15 bg-white/[0.07] px-4 backdrop-blur-xl">
+                <Boxes
+                  aria-hidden="true"
+                  className="text-[#d17c5b]"
+                  size={17}
+                  strokeWidth={1.5}
+                />
 
-              <span className="text-[0.59rem] font-semibold uppercase tracking-[0.14em] text-white/65">
-                OpenBIM
-              </span>
-            </div>
+                <span className="text-[0.59rem] font-semibold uppercase tracking-[0.14em] text-white/65">
+                  OpenBIM
+                </span>
+              </div>
 
-            <div className="inline-flex min-h-11 items-center rounded-full border border-white/15 bg-white/[0.07] px-4 backdrop-blur-xl">
-              <span className="text-[0.59rem] font-semibold uppercase tracking-[0.14em] text-white/65">
-                {bimModel.ifcSchema ?? "IFC"}
-                {modelSize ? ` · ${modelSize}` : ""}
-              </span>
+              <div className="inline-flex min-h-11 items-center rounded-full border border-white/15 bg-white/[0.07] px-4 backdrop-blur-xl">
+                <span className="text-[0.59rem] font-semibold uppercase tracking-[0.14em] text-white/65">
+                  {bimModel?.ifcSchema ?? "IFC"}
+                  {modelSize ? ` · ${modelSize}` : ""}
+                </span>
+              </div>
             </div>
+          ) : null}
+        </div>
+
+        {hasModel && bimModel && modelUrl ? (
+          <div className="overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#071d31] shadow-[0_2.5rem_8rem_rgb(0_0_0/0.35)]">
+            <BimViewerLoader
+              categoryProgress={bimModel.categoryProgress}
+              materialOverrides={bimModel.materialOverrides}
+              materials={bimModel.materials}
+              modelFormat={bimModel.format}
+              modelName={project.title}
+              modelUrl={modelUrl}
+            />
           </div>
-        </div>
-
-        <div className="overflow-hidden rounded-[1.75rem] border border-white/15 bg-[#071d31] shadow-[0_2.5rem_8rem_rgb(0_0_0/0.35)]">
-          <BimViewerLoader
-            categoryProgress={bimModel.categoryProgress}
-            materialOverrides={bimModel.materialOverrides}
-            materials={bimModel.materials}
-            modelFormat={bimModel.format}
-            modelName={project.title}
-            modelUrl={modelUrl}
-          />
-        </div>
+        ) : null}
 
         {progressEntries.length > 0 ? (
           <div

@@ -186,15 +186,38 @@ export async function getPublicProjectBySlug(
   return projects.findOne({ slug, status: "publicado" });
 }
 
-export async function listPublicBimProjects(): Promise<
+/*
+ * La página /modelos/[slug] también se usa para mostrar
+ * solo el avance de obra sin modelo BIM. Por eso incluye,
+ * además de los proyectos con IFC, los que tienen etapas
+ * de avance manual cargadas aunque no tengan modelo.
+ */
+export async function listPublicModelPageProjects(): Promise<
   WithId<Project>[]
 > {
   const projects = await getProjectsCollection();
 
-  return projects
-    .find({ status: "publicado", hasIfc: true })
+  const publicProjects = await projects
+    .find({ status: "publicado" })
     .sort({ sortOrder: 1, publishedAt: -1 })
     .toArray();
+
+  const withoutBim = publicProjects.filter(
+    (project) => !project.hasIfc,
+  );
+
+  const idsWithProgress =
+    await listProjectIdsWithConstructionProgress(
+      withoutBim.map((project) =>
+        project._id.toString(),
+      ),
+    );
+
+  return publicProjects.filter(
+    (project) =>
+      project.hasIfc ||
+      idsWithProgress.has(project._id.toString()),
+  );
 }
 
 export async function getAdminProjectBySlug(
