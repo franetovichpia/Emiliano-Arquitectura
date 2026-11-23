@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { Link } from "next-view-transitions";
 import {
   ArrowUpRight,
@@ -9,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { Reveal } from "@/components/motion/reveal";
+import { StackCards } from "@/components/motion/stack-cards";
 import { Container } from "@/app/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import {
@@ -73,15 +73,6 @@ const projectThemes: Record<
   },
 };
 
-// En mobile las cards quedan "pegadas" una sobre otra al hacer
-// scroll, con un pequeño escalón para que se vea el borde de
-// las anteriores. Así la sección no se hace tan larga.
-function stackTop(index: number) {
-  return {
-    "--stack-top": `${5.5 + index * 0.85}rem`,
-  } as CSSProperties;
-}
-
 export function ParticipatoryProjectsSection() {
   return (
     <section
@@ -129,25 +120,24 @@ export function ParticipatoryProjectsSection() {
         </div>
 
         {/* Rejilla asimétrica */}
-        <div className="mt-14 grid grid-cols-1 gap-4 sm:mt-20 lg:grid-cols-12">
+        <StackCards
+          className="mt-14 grid grid-cols-1 gap-4 sm:mt-20 lg:grid-cols-12"
+          itemClassNames={participatoryProjects.map((_, index) =>
+            index === 0 || index === 3
+              ? "lg:col-span-7"
+              : "lg:col-span-5",
+          )}
+          underlayClassName="rounded-[2rem] max-lg:bg-ivory"
+        >
           {participatoryProjects.map((project, index) => {
             const Icon = projectIcons[project.icon];
             const theme = projectThemes[project.theme];
 
-            const columnClass =
-              index === 0 || index === 3
-                ? "lg:col-span-7"
-                : "lg:col-span-5";
-
             return (
               <Reveal
-                className={cn(
-                  "h-full max-lg:sticky max-lg:top-[var(--stack-top)] max-lg:rounded-[2rem] max-lg:bg-ivory",
-                  columnClass,
-                )}
+                className="h-full"
                 delay={0.06 + index * 0.07}
                 key={project.title}
-                style={stackTop(index)}
               >
                 <article
                   className={cn(
@@ -263,7 +253,7 @@ export function ParticipatoryProjectsSection() {
               </Reveal>
             );
           })}
-        </div>
+        </StackCards>
       </Container>
     </section>
   );

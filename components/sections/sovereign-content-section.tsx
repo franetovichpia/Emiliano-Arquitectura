@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { Link } from "next-view-transitions";
 import {
   ArrowUpRight,
@@ -19,6 +18,7 @@ import {
 } from "react-icons/fa";
 
 import { Reveal } from "@/components/motion/reveal";
+import { StackCards } from "@/components/motion/stack-cards";
 import { Container } from "@/app/container";
 import {
   sovereignContentGroups,
@@ -301,7 +301,10 @@ export function SovereignContentSection() {
           </div>
         </Reveal>
 
-        <div className="mt-12 space-y-4 lg:mt-14">
+        <StackCards
+          className="mt-12 space-y-4 lg:mt-14"
+          underlayClassName="rounded-[1.5rem] max-lg:bg-paper"
+        >
           {sovereignContentGroups.map(
             (group, groupIndex) => {
               const isDark =
@@ -314,17 +317,11 @@ export function SovereignContentSection() {
 
               return (
                 <Reveal
-                  className="max-lg:sticky max-lg:top-[var(--stack-top)] max-lg:rounded-[1.5rem] max-lg:bg-paper"
                   delay={
                     0.06 +
                     groupIndex * 0.06
                   }
                   key={group.title}
-                  style={
-                    {
-                      "--stack-top": `${5.5 + groupIndex * 0.85}rem`,
-                    } as CSSProperties
-                  }
                 >
                   <article
                     className={
@@ -496,7 +493,7 @@ export function SovereignContentSection() {
               );
             },
           )}
-        </div>
+        </StackCards>
       </Container>
     </section>
   );

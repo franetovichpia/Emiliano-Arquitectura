@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 
 import { Reveal } from "@/components/motion/reveal";
+import { StackCards } from "@/components/motion/stack-cards";
 import { Container } from "@/app/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { professionalProfile } from "@/data/profile";
@@ -20,7 +21,7 @@ export function AboutSection() {
   return (
     <section
       aria-labelledby="about-heading"
-      className="relative scroll-mt-28 overflow-hidden bg-paper text-forest-deep"
+      className="relative scroll-mt-28 overflow-clip bg-paper text-forest-deep"
       id="sobre-mi"
     >
       <div
@@ -187,7 +188,11 @@ export function AboutSection() {
             </div>
           </Reveal>
 
-          <div className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-3">
+          <StackCards
+            below="md"
+            className="mt-10 grid grid-cols-1 gap-3 md:grid-cols-3"
+            underlayClassName="rounded-[1.5rem] max-md:bg-paper"
+          >
             {professionalProfile.principles.map(
               (principle, index) => {
                 const Icon = principleIcons[principle.icon];
@@ -227,7 +232,7 @@ export function AboutSection() {
                 );
               },
             )}
-          </div>
+          </StackCards>
         </div>
       </Container>
     </section>

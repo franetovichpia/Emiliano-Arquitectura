@@ -6,13 +6,13 @@ import {
 } from "lucide-react";
 
 import { Reveal } from "@/components/motion/reveal";
+import { StackCards } from "@/components/motion/stack-cards";
 import { Container } from "@/app/container";
 import { SectionHeading } from "@/components/ui/section-heading";
 import {
   resources,
   type ResourceIcon,
 } from "@/data/resources";
-import { cn } from "@/utils/cn";
 
 type ResourceIconProps = {
   icon: ResourceIcon;
@@ -44,7 +44,7 @@ export function ResourcesSection() {
   return (
     <section
       aria-labelledby="resources-heading"
-      className="relative isolate overflow-hidden bg-forest-deep text-ivory"
+      className="relative isolate overflow-clip bg-forest-deep text-ivory"
       id="recursos"
     >
       <div
@@ -92,20 +92,21 @@ export function ResourcesSection() {
         </div>
 
         {/* Recursos */}
-        <div className="mt-20 grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <StackCards
+          className="mt-14 grid grid-cols-1 gap-4 sm:mt-20 lg:grid-cols-12"
+          itemClassNames={resources.map((_, index) =>
+            index === 0 ? "lg:col-span-7" : "lg:col-span-5",
+          )}
+          underlayClassName="rounded-[2rem] max-lg:bg-forest-deep"
+        >
           {resources.map((resource, index) => {
-            const columnClass =
-              index === 0
-                ? "lg:col-span-7"
-                : "lg:col-span-5";
-
             return (
               <Reveal
-                className={cn("h-full", columnClass)}
+                className="h-full"
                 delay={0.08 + index * 0.08}
                 key={resource.title}
               >
-                <article className="glass-surface-dark glass-interactive group relative flex h-full min-h-[31rem] flex-col overflow-hidden rounded-[2rem] p-7 sm:p-9 lg:p-10">
+                <article className="glass-surface-dark glass-interactive group relative flex h-full min-h-[22rem] flex-col overflow-hidden rounded-[2rem] lg:min-h-[31rem] p-7 sm:p-9 lg:p-10">
                   <div
                     aria-hidden="true"
                     className="absolute -right-12 -top-16 font-sans text-[14rem] font-light leading-none tracking-[-0.08em] text-white/[0.025]"
@@ -176,7 +177,7 @@ export function ResourcesSection() {
               </Reveal>
             );
           })}
-        </div>
+        </StackCards>
       </Container>
     </section>
   );

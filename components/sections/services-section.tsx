@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { Reveal } from "@/components/motion/reveal";
+import { StackCards } from "@/components/motion/stack-cards";
 import { ButtonLink } from "@/components/ui/button-link";
 import { Container } from "@/app/container";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -26,7 +27,7 @@ export function ServicesSection() {
   return (
     <section
       aria-labelledby="services-heading"
-      className="relative isolate scroll-mt-28 overflow-hidden bg-blueprint-deep text-paper"
+      className="relative isolate scroll-mt-28 overflow-clip bg-blueprint-deep text-paper"
       id="servicios"
     >
       <div
@@ -70,7 +71,11 @@ export function ServicesSection() {
         </div>
 
         {/* Tarjetas compactas */}
-        <div className="mt-14 grid grid-cols-1 gap-3 sm:mt-16 md:grid-cols-2 xl:grid-cols-3">
+        <StackCards
+          below="md"
+          className="mt-14 grid grid-cols-1 gap-3 sm:mt-16 md:grid-cols-2 xl:grid-cols-3"
+          underlayClassName="rounded-[1.5rem] max-md:bg-blueprint-deep"
+        >
           {professionalServices.map((service, index) => {
             const Icon = serviceIcons[service.icon];
 
@@ -113,7 +118,7 @@ export function ServicesSection() {
               </Reveal>
             );
           })}
-        </div>
+        </StackCards>
 
         {/* Solicitud de proyecto */}
         <Reveal
