@@ -24,7 +24,7 @@ const decisions = [
   {
     number: "02",
     eyebrow: "Participación",
-    title: "Sumarme a un proyecto integrativo",
+    title: "Solicitar un proyecto integrativo",
     description:
       "Conocer proyectos integrativos, comunidades y formas de colaboración.",
     href: "/proyectos-integrativos",
@@ -60,29 +60,21 @@ export function HeroSection() {
         {/* Identidad */}
         <div className="relative lg:col-span-7">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-blueprint-line">
-              Arquitecto UBA
-            </span>
-
             <span
               aria-hidden="true"
               className="hidden h-px w-8 bg-terracotta sm:block"
             />
 
-            <span className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-ivory/55">
-              Asesor BIM · Maestro Mayor de Obras
+            <span className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-blueprint-line">
+              Emiliano Rossotti y Asociados
             </span>
           </div>
 
-          <h1 className="mt-8 max-w-[8.5ch] font-serif text-[clamp(3.2rem,15vw,5.5rem)] font-medium leading-[0.84] tracking-[-0.045em] text-ivory lg:mt-10 lg:text-[clamp(4.5rem,7vw,7.4rem)]">
-            Emiliano
+          <h1 className="mt-8 font-serif text-[clamp(3rem,13vw,5.5rem)] font-medium leading-[0.84] tracking-[-0.045em] text-ivory lg:mt-10 lg:text-[clamp(4.5rem,6.4vw,7rem)]">
+            Rossotti
 
             <span className="block italic text-sage">
-              Gabriel
-            </span>
-
-            <span className="block">
-              Rossotti
+              Arquitectura
             </span>
           </h1>
 
