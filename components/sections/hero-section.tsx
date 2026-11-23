@@ -58,7 +58,7 @@ export function HeroSection() {
 
       <Container className="relative z-10 grid min-h-svh grid-cols-1 items-start gap-10 pb-14 pt-32 sm:pt-36 lg:grid-cols-12 lg:items-center lg:gap-12 lg:pb-20 lg:pt-36">
         {/* Identidad */}
-        <div className="relative lg:col-span-7">
+        <div className="relative lg:col-span-7 lg:pl-8 xl:pl-14 2xl:pl-24">
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <span
               aria-hidden="true"
