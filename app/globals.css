@@ -139,12 +139,12 @@ p {
   width: 100%;
   max-width: 100rem;
   margin-inline: auto;
-  padding-inline: var(--page-gutter);
+  padding-inline: calc(var(--page-gutter) + var(--content-inset));
 }
 
-/* Margen extra del contenido (todas las secciones y el footer),
-   para que no quede pegado al borde en pantallas anchas.
-   El header queda con el margen original. */
+/* Margen extra en pantallas anchas, igual en todo el sitio
+   (header, secciones, footer y páginas internas), para que el
+   contenido no quede pegado al borde. */
 :root {
   --content-inset: 0rem;
 }
@@ -165,11 +165,6 @@ p {
   :root {
     --content-inset: 6rem;
   }
-}
-
-main .container-shell,
-footer .container-shell {
-  padding-inline: calc(var(--page-gutter) + var(--content-inset));
 }
 
 /* Superficie clara */
