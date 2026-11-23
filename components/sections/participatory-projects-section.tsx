@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Link } from "next-view-transitions";
 import {
   ArrowUpRight,
@@ -72,11 +73,20 @@ const projectThemes: Record<
   },
 };
 
+// En mobile las cards quedan "pegadas" una sobre otra al hacer
+// scroll, con un pequeño escalón para que se vea el borde de
+// las anteriores. Así la sección no se hace tan larga.
+function stackTop(index: number) {
+  return {
+    "--stack-top": `${5.5 + index * 0.85}rem`,
+  } as CSSProperties;
+}
+
 export function ParticipatoryProjectsSection() {
   return (
     <section
       aria-labelledby="participatory-projects-heading"
-      className="relative overflow-hidden bg-ivory text-forest-deep"
+      className="relative overflow-clip bg-ivory text-forest-deep"
       id="proyectos-integrativos"
     >
       <div
@@ -119,7 +129,7 @@ export function ParticipatoryProjectsSection() {
         </div>
 
         {/* Rejilla asimétrica */}
-        <div className="mt-20 grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="mt-14 grid grid-cols-1 gap-4 sm:mt-20 lg:grid-cols-12">
           {participatoryProjects.map((project, index) => {
             const Icon = projectIcons[project.icon];
             const theme = projectThemes[project.theme];
@@ -131,13 +141,17 @@ export function ParticipatoryProjectsSection() {
 
             return (
               <Reveal
-                className={cn("h-full", columnClass)}
+                className={cn(
+                  "h-full max-lg:sticky max-lg:top-[var(--stack-top)] max-lg:rounded-[2rem] max-lg:bg-ivory",
+                  columnClass,
+                )}
                 delay={0.06 + index * 0.07}
                 key={project.title}
+                style={stackTop(index)}
               >
                 <article
                   className={cn(
-                    "glass-interactive group relative isolate flex min-h-[28rem] h-full flex-col overflow-hidden rounded-[2rem] border p-7 shadow-[0_2rem_5rem_rgb(20_24_20/0.12)] sm:p-9 lg:min-h-[31rem]",
+                    "glass-interactive group relative isolate flex min-h-[22rem] h-full flex-col overflow-hidden rounded-[2rem] border p-7 shadow-[0_2rem_5rem_rgb(20_24_20/0.12)] sm:p-9 lg:min-h-[31rem]",
                     theme.card,
                   )}
                 >

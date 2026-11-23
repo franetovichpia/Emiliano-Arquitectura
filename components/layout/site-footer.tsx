@@ -98,7 +98,7 @@ export function SiteFooter() {
               </p>
 
               <p className="mt-7 max-w-lg text-sm leading-7 text-ivory/45">
-                Arquitecto UBA · Asesor BIM · Maestro Mayor de Obras
+                Arquitecto Utopista · UBA · MMO
               </p>
             </div>
 
@@ -241,9 +241,9 @@ export function SiteFooter() {
               />
 
               <Link
-                aria-label="Visitar el portfolio de Novaire Studio"
+                aria-label="Visitar el sitio de Novaire Studio"
                 className="group inline-flex items-center gap-2 uppercase text-ivory/35 transition-colors duration-300 hover:text-sage"
-                href="https://novaire-psi.vercel.app/"
+                href="https://www.studionovaire.com/"
                 rel="noreferrer"
                 target="_blank"
               >

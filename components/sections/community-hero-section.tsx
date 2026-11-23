@@ -68,8 +68,8 @@ export function CommunityHeroSection() {
 
           <Reveal delay={0.2}>
             <p className="mt-8 max-w-2xl font-sans text-base font-light leading-8 text-ivory/65 sm:text-lg">
-              Un espacio para conocer propuestas integrativas, participar y
-              construir nuevas formas de habitar orientadas al Bien Común.
+              Un espacio donde entrelazar juntos proyectos en consciencia, y
+              restaurar la integración del tejido social.
             </p>
           </Reveal>
 

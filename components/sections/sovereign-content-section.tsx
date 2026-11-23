@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { Link } from "next-view-transitions";
 import {
   ArrowUpRight,
@@ -275,7 +276,7 @@ export function SovereignContentSection() {
   return (
     <section
       aria-labelledby="sovereign-content-heading"
-      className="relative scroll-mt-28 overflow-hidden bg-paper text-forest-deep"
+      className="relative scroll-mt-28 overflow-clip bg-paper text-forest-deep"
       id="contenido-soberano"
     >
       <div
@@ -313,11 +314,17 @@ export function SovereignContentSection() {
 
               return (
                 <Reveal
+                  className="max-lg:sticky max-lg:top-[var(--stack-top)] max-lg:rounded-[1.5rem] max-lg:bg-paper"
                   delay={
                     0.06 +
                     groupIndex * 0.06
                   }
                   key={group.title}
+                  style={
+                    {
+                      "--stack-top": `${5.5 + groupIndex * 0.85}rem`,
+                    } as CSSProperties
+                  }
                 >
                   <article
                     className={

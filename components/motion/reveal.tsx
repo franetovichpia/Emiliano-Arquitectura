@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   useEffect,
   useState,
@@ -15,6 +15,7 @@ type RevealProps = {
   className?: string;
   delay?: number;
   distance?: number;
+  style?: CSSProperties;
 };
 
 export function Reveal({
@@ -22,6 +23,7 @@ export function Reveal({
   className,
   delay = 0,
   distance = 24,
+  style,
 }: RevealProps) {
   const shouldReduceMotion = useReducedMotion();
   const [isDesktop, setIsDesktop] =
@@ -58,6 +60,7 @@ export function Reveal({
     <motion.div
       className={className}
       initial={false}
+      style={style}
       transition={{
         delay: shouldAnimate ? delay : 0,
         duration: shouldAnimate ? 0.65 : 0,
