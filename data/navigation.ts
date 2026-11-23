@@ -21,6 +21,10 @@ export const mainNavigation: readonly NavigationItem[] = [
     href: "/#proyectos-profesionales",
   },
   {
+    label: "Dimensión 3D",
+    href: "/proyectos?bim=1",
+  },
+  {
     label: "Contacto",
     href: "/#contacto",
   },
