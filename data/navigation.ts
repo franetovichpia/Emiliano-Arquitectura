@@ -22,7 +22,7 @@ export const mainNavigation: readonly NavigationItem[] = [
   },
   {
     label: "Dimensión 3D",
-    href: "/proyectos?bim=1",
+    href: "/#visor-bim",
   },
   {
     label: "Contacto",
