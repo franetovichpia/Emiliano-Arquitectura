@@ -73,9 +73,9 @@ export async function ProfessionalProjectsSection() {
               className="mt-6 max-w-4xl font-serif text-[clamp(3rem,6vw,6.5rem)] font-medium leading-[0.88] tracking-[-0.04em]"
               id="professional-projects-heading"
             >
-              Arquitectura,
+              Proyectos,
               <span className="block italic text-sage">
-                documentación
+                desarrollos
               </span>
               <span className="block">y BIM.</span>
             </h2>

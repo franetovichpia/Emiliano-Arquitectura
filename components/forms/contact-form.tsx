@@ -10,6 +10,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CheckCircle2,
+  ChevronDown,
   CircleAlert,
   Send,
 } from "lucide-react";
@@ -23,10 +24,10 @@ import {
 import { cn } from "@/utils/cn";
 
 const inputClasses =
-  "min-h-13 w-full rounded-2xl border border-white/15 bg-white/[0.07] px-4 text-sm text-paper outline-none backdrop-blur-xl transition-colors duration-300 placeholder:text-ivory/30 hover:border-white/25 focus:border-terracotta focus:bg-white/[0.1] focus:ring-2 focus:ring-terracotta/20";
+  "min-h-12 w-full rounded-xl border border-white/15 bg-white/[0.07] px-4 text-sm text-paper outline-none backdrop-blur-xl transition-colors duration-300 placeholder:text-ivory/30 hover:border-white/25 focus:border-terracotta focus:bg-white/[0.1] focus:ring-2 focus:ring-terracotta/20";
 
 const labelClasses =
-  "mb-3 block text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-sage";
+  "mb-2 block text-[0.62rem] font-semibold uppercase tracking-[0.15em] text-sage";
 
 const errorClasses =
   "text-xs leading-5 text-[#ffb5a0]";
@@ -119,23 +120,8 @@ export function ContactForm() {
     },
   });
 
-  const nameValue =
-    useWatch({
-      control,
-      name: "name",
-    }) ?? "";
 
-  const emailValue =
-    useWatch({
-      control,
-      name: "email",
-    }) ?? "";
 
-  const organizationValue =
-    useWatch({
-      control,
-      name: "organization",
-    }) ?? "";
 
   const messageValue =
     useWatch({
@@ -198,7 +184,7 @@ export function ContactForm() {
 
   return (
     <form
-      className="relative rounded-[2rem] border border-white/15 bg-white/[0.06] p-6 shadow-[0_2rem_6rem_rgb(0_0_0/0.2)] backdrop-blur-2xl sm:p-8 lg:p-10"
+      className="relative rounded-[1.6rem] border border-white/15 bg-white/[0.06] p-5 shadow-[0_2rem_6rem_rgb(0_0_0/0.2)] backdrop-blur-2xl sm:p-7 lg:p-8"
       noValidate
       onSubmit={handleSubmit(onSubmit)}
     >
@@ -226,7 +212,7 @@ export function ContactForm() {
             Formulario de contacto
           </p>
 
-          <h3 className="mt-4 font-sans text-2xl font-light tracking-[-0.025em] text-paper sm:text-3xl">
+          <h3 className="mt-3 font-sans text-2xl font-light tracking-[-0.025em] text-paper sm:text-3xl">
             Contanos sobre tu proyecto.
           </h3>
         </div>
@@ -239,7 +225,7 @@ export function ContactForm() {
         </span>
       </div>
 
-      <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="mt-7 grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Nombre */}
         <div>
           <label
@@ -252,8 +238,8 @@ export function ContactForm() {
           <input
             aria-describedby={
               errors.name
-                ? "contact-name-error contact-name-count"
-                : "contact-name-count"
+                ? "contact-name-error"
+                : undefined
             }
             aria-invalid={Boolean(
               errors.name,
@@ -269,25 +255,15 @@ export function ContactForm() {
             {...register("name")}
           />
 
-          <div className="mt-2 flex min-h-5 items-start gap-3">
-            {errors.name ? (
-              <p
-                className={errorClasses}
-                id="contact-name-error"
-                role="alert"
-              >
-                {errors.name.message}
-              </p>
-            ) : null}
-
-            <CharacterCount
-              current={nameValue.length}
-              id="contact-name-count"
-              maximum={
-                CONTACT_LIMITS.name
-              }
-            />
-          </div>
+          {errors.name ? (
+            <p
+              className={cn(errorClasses, "mt-1.5")}
+              id="contact-name-error"
+              role="alert"
+            >
+              {errors.name.message}
+            </p>
+          ) : null}
         </div>
 
         {/* Correo */}
@@ -302,8 +278,8 @@ export function ContactForm() {
           <input
             aria-describedby={
               errors.email
-                ? "contact-email-error contact-email-count"
-                : "contact-email-count"
+                ? "contact-email-error"
+                : undefined
             }
             aria-invalid={Boolean(
               errors.email,
@@ -320,25 +296,15 @@ export function ContactForm() {
             {...register("email")}
           />
 
-          <div className="mt-2 flex min-h-5 items-start gap-3">
-            {errors.email ? (
-              <p
-                className={errorClasses}
-                id="contact-email-error"
-                role="alert"
-              >
-                {errors.email.message}
-              </p>
-            ) : null}
-
-            <CharacterCount
-              current={emailValue.length}
-              id="contact-email-count"
-              maximum={
-                CONTACT_LIMITS.email
-              }
-            />
-          </div>
+          {errors.email ? (
+            <p
+              className={cn(errorClasses, "mt-1.5")}
+              id="contact-email-error"
+              role="alert"
+            >
+              {errors.email.message}
+            </p>
+          ) : null}
         </div>
 
         {/* Organización */}
@@ -353,8 +319,8 @@ export function ContactForm() {
           <input
             aria-describedby={
               errors.organization
-                ? "contact-organization-error contact-organization-count"
-                : "contact-organization-count"
+                ? "contact-organization-error"
+                : undefined
             }
             aria-invalid={Boolean(
               errors.organization,
@@ -372,30 +338,18 @@ export function ContactForm() {
             )}
           />
 
-          <div className="mt-2 flex min-h-5 items-start gap-3">
-            {errors.organization ? (
-              <p
-                className={errorClasses}
-                id="contact-organization-error"
-                role="alert"
-              >
-                {
-                  errors.organization
-                    .message
-                }
-              </p>
-            ) : null}
-
-            <CharacterCount
-              current={
-                organizationValue.length
+          {errors.organization ? (
+            <p
+              className={cn(errorClasses, "mt-1.5")}
+              id="contact-organization-error"
+              role="alert"
+            >
+              {
+                errors.organization
+                  .message
               }
-              id="contact-organization-count"
-              maximum={
-                CONTACT_LIMITS.organization
-              }
-            />
-          </div>
+            </p>
+          ) : null}
         </div>
 
         {/* Tipo de consulta */}
@@ -407,58 +361,65 @@ export function ContactForm() {
             Tipo de consulta *
           </label>
 
-          <select
-            aria-describedby={
-              errors.service
-                ? "contact-service-error"
-                : undefined
-            }
-            aria-invalid={Boolean(
-              errors.service,
-            )}
-            className={cn(
-              inputClasses,
-              "appearance-none",
-            )}
-            id="contact-service"
-            {...register("service")}
-          >
-            <option
-              className="bg-forest-deep text-paper"
-              value=""
+          <div className="relative">
+            <select
+              aria-describedby={
+                errors.service
+                  ? "contact-service-error"
+                  : undefined
+              }
+              aria-invalid={Boolean(
+                errors.service,
+              )}
+              className={cn(
+                inputClasses,
+                "cursor-pointer appearance-none pr-11",
+              )}
+              id="contact-service"
+              {...register("service")}
             >
-              Seleccionar
-            </option>
-
-            {contactServiceOptions.map(
-              (option) => (
-                <option
-                  className="bg-forest-deep text-paper"
-                  key={option.value}
-                  value={option.value}
-                >
-                  {option.label}
-                </option>
-              ),
-            )}
-          </select>
-
-          <div className="mt-2 min-h-5">
-            {errors.service ? (
-              <p
-                className={errorClasses}
-                id="contact-service-error"
-                role="alert"
+              <option
+                className="bg-forest-deep text-paper"
+                value=""
               >
-                {errors.service.message}
-              </p>
-            ) : null}
+                Seleccionar
+              </option>
+
+              {contactServiceOptions.map(
+                (option) => (
+                  <option
+                    className="bg-forest-deep text-paper"
+                    key={option.value}
+                    value={option.value}
+                  >
+                    {option.label}
+                  </option>
+                ),
+              )}
+            </select>
+
+            <ChevronDown
+              aria-hidden="true"
+              className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-ivory/45"
+              size={16}
+              strokeWidth={1.6}
+            />
           </div>
+
+          {errors.service ? (
+            <p
+              className={cn(errorClasses, "mt-1.5")}
+              id="contact-service-error"
+              role="alert"
+            >
+              {errors.service.message}
+            </p>
+          ) : null}
         </div>
       </div>
 
       {/* Mensaje */}
-      <div className="mt-6">
+      <div className="mt-4">
         <label
           className={labelClasses}
           htmlFor="contact-message"
@@ -477,18 +438,18 @@ export function ContactForm() {
           )}
           className={cn(
             inputClasses,
-            "min-h-44 resize-y py-4 leading-7",
+            "min-h-32 resize-y py-3.5 leading-7",
           )}
           id="contact-message"
           maxLength={
             CONTACT_LIMITS.message
           }
           placeholder="Contanos brevemente qué necesitás, el tipo de proyecto y sus objetivos."
-          rows={7}
+          rows={5}
           {...register("message")}
         />
 
-        <div className="mt-2 flex min-h-5 items-start gap-3">
+        <div className="mt-1.5 flex items-start gap-3">
           {errors.message ? (
             <p
               className={errorClasses}
@@ -517,7 +478,7 @@ export function ContactForm() {
       </div>
 
       {/* Consentimiento */}
-      <div className="mt-6">
+      <div className="mt-4">
         <label className="flex cursor-pointer items-start gap-3">
           <input
             aria-describedby={
@@ -566,7 +527,7 @@ export function ContactForm() {
       submissionMessage ? (
         <div
           className={cn(
-            "mt-7 flex items-start gap-3 rounded-2xl border p-4 text-sm leading-6",
+            "mt-5 flex items-start gap-3 rounded-xl border p-4 text-sm leading-6",
             submissionStatus ===
               "success"
               ? "border-sage/25 bg-sage/10 text-sage"
@@ -601,13 +562,13 @@ export function ContactForm() {
       ) : null}
 
       {/* Envío */}
-      <div className="mt-8 flex flex-col gap-4 border-t border-white/10 pt-7 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-5 flex flex-col gap-4 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
         <p className="max-w-xs text-[0.62rem] uppercase leading-5 tracking-[0.12em] text-ivory/30">
           Los campos marcados con * son obligatorios
         </p>
 
         <button
-          className="glass-interactive inline-flex min-h-13 items-center justify-center gap-3 rounded-full border border-white/20 bg-terracotta px-7 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_1rem_3rem_rgb(184_98_69/0.24)] hover:border-white/35 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+          className="glass-interactive inline-flex min-h-12 items-center justify-center gap-3 rounded-full border border-white/20 bg-terracotta px-7 py-3 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-white shadow-[0_1rem_3rem_rgb(184_98_69/0.24)] hover:border-white/35 hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
           disabled={isSubmitting}
           type="submit"
         >

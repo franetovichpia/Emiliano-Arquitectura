@@ -19,7 +19,7 @@ export const contactServiceOptions = [
   },
   {
     value: "documentacion",
-    label: "Documentación técnica",
+    label: "Documentación ejecutiva",
   },
   {
     value: "consultoria-bim",
@@ -32,6 +32,10 @@ export const contactServiceOptions = [
   {
     value: "formacion-bim",
     label: "Formación BIM",
+  },
+  {
+    value: "nuevas-ruralidades",
+    label: "Nuevas ruralidades",
   },
   {
     value: "otro",

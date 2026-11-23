@@ -16,23 +16,23 @@ export const professionalServices = [
   {
     icon: "plans",
     number: "03",
-    title: "Planos y representación",
+    title: "Proyecto y documentación 3D",
     description:
       "Elaboración de planos municipales, layouts y representación arquitectónica.",
   },
   {
-    icon: "bim",
-    number: "04",
-    title: "Implementación BIM",
-    description:
-      "Incorporación de sistemas BIM como motor de las actividades de documentación y modelado.",
-  },
-  {
     icon: "visualization",
-    number: "05",
+    number: "04",
     title: "Modelado y visualización",
     description:
       "Documentación 2D, modelado 3D y recorridos virtuales 4D.",
+  },
+  {
+    icon: "bim",
+    number: "05",
+    title: "Implementación BIM",
+    description:
+      "Incorporación de sistemas BIM como motor de las actividades de documentación y modelado.",
   },
   {
     icon: "training",

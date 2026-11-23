@@ -37,21 +37,14 @@ export function ButtonLink({
   showArrow = false,
   ariaLabel,
 }: ButtonLinkProps) {
-  return (
-    // Sin "inline-flex" acá a propósito: cn() no resuelve
-    // conflictos de Tailwind, así que un display fijo acá
-    // pisaría un "hidden"/"flex" responsivo pasado por
-    // className. Cada caller define su propio display
-    // (ver app/not-found.tsx, app/error.tsx, services-section.tsx).
-    <Link
-      aria-label={ariaLabel}
-      className={cn(
-        "glass-interactive group min-h-12 items-center justify-center gap-3 rounded-full border px-6 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.13em] backdrop-blur-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-terracotta",
-        variantClasses[variant],
-        className,
-      )}
-      href={href}
-    >
+  const classes = cn(
+    "glass-interactive group min-h-12 items-center justify-center gap-3 rounded-full border px-6 py-3 text-[0.72rem] font-semibold uppercase tracking-[0.13em] backdrop-blur-xl focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-terracotta",
+    variantClasses[variant],
+    className,
+  );
+
+  const content = (
+    <>
       <span>{children}</span>
 
       {showArrow ? (
@@ -62,6 +55,36 @@ export function ButtonLink({
           strokeWidth={1.7}
         />
       ) : null}
+    </>
+  );
+
+  // Los anclas dentro de la misma página ("#contacto") van con
+  // un <a> común: así el navegador hace el scroll directo, sin
+  // pasar por el router ni por la view transition.
+  if (href.startsWith("#")) {
+    return (
+      <a
+        aria-label={ariaLabel}
+        className={classes}
+        href={href}
+      >
+        {content}
+      </a>
+    );
+  }
+
+  return (
+    // Sin "inline-flex" en classes a propósito: cn() no resuelve
+    // conflictos de Tailwind, así que un display fijo acá
+    // pisaría un "hidden"/"flex" responsivo pasado por
+    // className. Cada caller define su propio display
+    // (ver app/not-found.tsx, app/error.tsx, services-section.tsx).
+    <Link
+      aria-label={ariaLabel}
+      className={classes}
+      href={href}
+    >
+      {content}
     </Link>
   );
 }

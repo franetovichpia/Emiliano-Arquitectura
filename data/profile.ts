@@ -36,21 +36,21 @@ export const professionalProfile = {
       number: "01",
       title: "Viviendas soberanas",
       description:
-        "Mi vocación está orientada hacia las viviendas soberanas.",
+        "La autosuficiencia de vivienda, energía y alimento es la clave de la soberanía. Su diseño estético y formal, mi especialidad.",
     },
     {
       icon: "process",
       number: "02",
       title: "Optimización",
       description:
-        "Busco optimizar los procesos de proyecto y obra para alcanzar la mejor construcción al menor costo posible.",
+        "Recursos, personas, tiempos y objetivos son indispensables para lograr un final de obra en buena forma. Las herramientas BIM y la lógica de administración general, mi especialidad.",
     },
     {
       icon: "community",
       number: "03",
       title: "Bien Común",
       description:
-        "Creo en la colaboración por encima de la competencia y en la mejora continua como propósito fundamental.",
+        "Creo en la colaboración por encima de la competencia y en la mejora continua como propósito fundamental. Diseño los espacios orientados a la nueva economía del servicio real.",
     },
   ],
 } as const;

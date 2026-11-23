@@ -136,7 +136,7 @@ export function AboutSection() {
                     </p>
 
                     <p className="mt-3 max-w-sm font-serif text-2xl leading-snug text-forest-deep">
-                      Proyecto, obra y procesos BIM.
+                      Proyecto, obra y gestión BIM.
                     </p>
                   </div>
 

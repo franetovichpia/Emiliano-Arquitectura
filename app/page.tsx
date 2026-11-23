@@ -13,9 +13,9 @@ export default function HomePage() {
     <main>
       <HeroSection />
       <ProfessionalProjectsSection />
+      <AboutSection />
       <ServicesSection />
       <BimViewerSection />
-      <AboutSection />
       <AstrocasasSection />
       <ContactSection />
       <ReflectionsSection />

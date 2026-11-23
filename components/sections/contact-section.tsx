@@ -10,9 +10,10 @@ import { SectionHeading } from "@/components/ui/section-heading";
 
 const contactAreas = [
   "Proyectos integrales",
-  "Dirección y documentación de obra",
+  "Dirección de obra",
+  "Documentación ejecutiva",
   "Consultoría e implementación BIM",
-  "Proyectos integrativos y soberanos",
+  "Nuevas ruralidades",
 ] as const;
 
 export function ContactSection() {
@@ -38,7 +39,7 @@ export function ContactSection() {
       />
 
       <Container className="relative py-24 sm:py-28 lg:py-36">
-        <div className="grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-12">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-12">
           {/* Información */}
           <div className="lg:col-span-5">
             <div className="lg:sticky lg:top-32">
@@ -52,7 +53,7 @@ export function ContactSection() {
               </Reveal>
 
               <Reveal
-                className="mt-12"
+                className="mt-8"
                 delay={0.08}
               >
                 <p className="max-w-xl font-sans text-[clamp(1.5rem,2.5vw,2.8rem)] font-light leading-relaxed tracking-[-0.025em] text-paper">
@@ -61,7 +62,7 @@ export function ContactSection() {
               </Reveal>
 
               <Reveal
-                className="mt-12"
+                className="mt-8"
                 delay={0.16}
               >
                 <div className="border-t border-white/10 pt-8">
@@ -77,7 +78,7 @@ export function ContactSection() {
                     </p>
                   </div>
 
-                  <ul className="mt-7 space-y-4">
+                  <ul className="mt-5 space-y-2.5">
                     {contactAreas.map((area) => (
                       <li
                         className="flex items-start gap-3 text-sm leading-7 text-ivory/60"

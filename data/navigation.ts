@@ -37,7 +37,7 @@ export const communityNavigation: readonly NavigationItem[] = [
   },
   {
     label: "Propuestas",
-    href: "/proyectos-integrativos#proyectos",
+    href: "/proyectos-integrativos#proyectos-integrativos",
   },
   {
     label: "Recursos",

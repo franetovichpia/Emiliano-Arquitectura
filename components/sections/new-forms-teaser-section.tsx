@@ -25,7 +25,7 @@ export function NewFormsTeaserSection() {
             <div className="flex flex-col justify-center p-7 sm:p-9 lg:col-span-7 lg:p-10">
               <Reveal>
                 <p className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-terracotta">
-                  Otra línea del proyecto
+                  Espacio de entrevistas de valor
                 </p>
 
                 <h2
@@ -42,8 +42,8 @@ export function NewFormsTeaserSection() {
 
               <Reveal delay={0.08}>
                 <p className="mt-5 max-w-2xl text-sm font-light leading-7 text-ivory/60 sm:text-base">
-                  Una experiencia independiente vinculada al universo de
-                  Emiliano Gabriel Rossotti.
+                  Una experiencia independiente expandiendo la filosofía de
+                  escucha activa de Emiliano Gabriel Rossotti.
                 </p>
               </Reveal>
 
